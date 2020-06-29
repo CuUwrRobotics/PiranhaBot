@@ -1,0 +1,13 @@
+# CAMERAS + DISPLAY
+camera_config_file: "/home/pi/robot_config_files/camera_config.yaml"
+display_mini_viewer_width: 128
+display_use_mini_viewer: true
+display_screenshot_location: ""
+display_mini_viewer_corner: 4 # Numbered left to right then top to bottom
+# Use camera digit 255 to use test an image isntaad of a camera:
+#dummy_camera_image_file: "/home/pi/image0.jpeg" # 4:3, same as display 
+#dummy_camera_image_file: "/home/pi/image1.jpeg" # 16:9 
+dummy_camera_image_file: "/home/pi/image3.webp" # about 12:5 (really wide)
+#dummy_camera_image_file: "/home/pi/image4.jpeg" # about 14:25 (really tall)
+display_width: 640
+display_height: 480

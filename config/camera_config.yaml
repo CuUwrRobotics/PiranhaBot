@@ -1,0 +1,51 @@
+- camera_num: 1
+  #camera_name: "Logitech, Inc. HD Webcam C525"
+  usb_pid: 0
+  # Software/program configuration info
+  device_digit: 0
+  frame_rate: 22
+# Capabilities (true = camera does these, false = they are done digitally)
+  shutdown: false # not yet implemented; keyboard can't do this either.
+  iris: false
+  focus: true
+  zoom: false
+  pan: true
+  tilt: true
+# Limits
+  zoom_min: 1 # Min/max levels that camera will accept
+  zoom_max: 5
+  
+- camera_num: 2
+  #camera_name: "Spare Cam"
+  usb_pid: 0
+  # Software/program configuration info
+  device_digit: 255 
+  frame_rate: 22
+# Capabilities (true = camera does these, false = they are done digitally)
+  shutdown: false 
+  iris: false
+  focus: false
+  zoom: false
+  pan: false
+  tilt: false
+# Limits
+  zoom_min: 1 # Min/max levels that camera will accept
+  zoom_max: 5
+  
+- camera_num: 3
+  #camera_name: "Logitech, Inc. HD Webcam C525"
+  usb_pid: 1
+  # Software/program configuration info
+  device_digit: 0
+  frame_rate: 22
+# Capabilities (true = camera does these, false = they are done digitally)
+  shutdown: false 
+  iris: false
+  focus: false
+  zoom: false
+  pan: false
+  tilt: false
+# Limits
+  zoom_min: 1 # Min/max levels that camera will accept
+  zoom_max: 5
+  
