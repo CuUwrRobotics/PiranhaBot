@@ -1,1 +1,1 @@
-# piranhaBot
+# PiranhaBot
