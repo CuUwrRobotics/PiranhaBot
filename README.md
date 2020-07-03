@@ -1,5 +1,4 @@
 # PiranhaBot
----
 ### Directories
 - Packages for controller device go in `/SurfaceDevice` folder.
 - Config files for all packages go in the `/config` or `/SurfaceDevice/config` folder.
