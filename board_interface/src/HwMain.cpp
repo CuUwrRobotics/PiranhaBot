@@ -203,7 +203,7 @@ void createAndInitDevices(){
 
 	// variable value must be changed if this is true
 	if (i != TOTAL_DEVICES) {
-		printf(
+		ROS_ERROR(
 			"ERROR: TOTAL_DEVICES NOT SET CORRECTLY! DOUBLE CHECK DEVICE COUNT OR SETUP!\nSTOPPING.\n");
 		while (true) {}
 	}
@@ -290,7 +290,7 @@ void createAndInitInterfaces(){
 
 	// variable value must be changed if this is true
 	if (i != TOTAL_INTERFACES) {
-		printf(
+		ROS_ERROR(
 			"ERROR: TOTAL_INTERFACES NOT SET CORRECTLY! DOUBLE CHECK INTERACE COUNT OR SETUP!\nSTOPPING.\n");
 		while (true) {}
 	}
