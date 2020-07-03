@@ -1,24 +1,21 @@
-/* Interface.cpp
- * Abstract class which is used to implement any interface. Interfaces are not directly controlled
- * by Raspberry
- * Pi's digital lines, while devices are. For example, the Power Mosfets are driven by a GPIO chip,
- * which is then
- * driven by the RPi, therfore indirect control.
+/* Interface_Leak.cpp
+ * Checks leak sensors on GPIO3.
+ * Also interacts with telemetry interface
  */
 
- #include "../HwHeader.h"
- #include "Devices_interface.h"
+ #include "HwHeader.h"
+ #include "Devices_interfaces.h"
 
 /**
  * PowerControl
  * @author
  */
-class Mosfet_PwrInterface : public Interface {
+class Interface_EmergIO : public Interface {
 private:
 // SET THESE FOR ANY NEW INTERFACE
 // ----------------------------------------------------------------------------
-const static uint8_t PIN_COUNT = 4; // number of pins
-uint8_t interfaceTypeId = HardwareDescriptor::INTF_PWR_SWITCHING; // The ID for this intf
+const static uint8_t PIN_COUNT = 3; // number of pins
+uint8_t interfaceTypeId = HardwareDescriptor::INTF_TEL_EMERGENCY_IO; // The ID for this intf
 uint8_t parentDeviceTypeId = HardwareDescriptor::DEVICE_GPIO; // The IF for the device
 // ----------------------------------------------------------------------------
 
@@ -35,52 +32,52 @@ public:
  * @param hd The full hardware descriptor.
  * @return true of sucessful
  */
-bool start(Device *device, PinBus pb, uint8_t ifaceIndex) {
-	initSuccessful = false;
-	// Verification code: don't put any init stuff here!
-	// Check that device is the correct type
-	commDevice = device;
+ bool start(Device *device, PinBus pb, uint8_t ifaceIndex) {
+ 	initSuccessful = false;
+ 	// Verification code: don't put any init stuff here!
+ 	// Check that device is the correct type
+ 	commDevice = device;
 	commDeviceExists = true;
-	if (parentDeviceTypeId != commDevice->getTypeId()) {
-		printf("ERROR: parentDeviceTypeId bad. Expeccted: 0x%.16X, Got: 0x%.16X\n",
-		       parentDeviceTypeId, commDevice->getTypeId());
-		return false;
-	}
-	// Check that device is initialized
-	if (!commDevice->ready()) {
-		printf("ERROR: parentDevice not ready\n");
-		return false;
-	}
-	// Check that devicePins is not longer than PIN_COUNT
-	if (pb.getPinCount() != PIN_COUNT) {
-		printf("ERROR: device pins size bad: %d, pin count = %d\n",
-		       pb.getPinCount(),
-		       PIN_COUNT);
-		return false;
-	}
-	// Verification done. Add any code for initialization here.
-	// ***************************************************************************
-	// Some variable setups
-	interfaceIndex = ifaceIndex;
-	// Create a base hardware descriptor that uses in invalid pin number
-	baseHardwareDescriptor =
-		HardwareDescriptor::createHardwareDescriptor(interfaceTypeId,
-		                                             parentDeviceTypeId,
-		                                             interfaceIndex,
-		                                             commDevice->getDeviceIndex(),
-		                                             HardwareDescriptor::
-		                                             INVALID_PIN_NUMBER);
-	// for (uint8_t i = 0; i < PIN_COUNT; i++) {
-	// pinMapToDevice[i] = devicePins[i];
-	// pinModes[i] = 0x10;
-	// }
-	pinBus = pb;
-	if (commDevice->attachInterface(pinBus, interfaceTypeId))
-		initSuccessful = true;
-	return initSuccessful;
+ 	if (parentDeviceTypeId != commDevice->getDeviceTypeId()) {
+ 		printf("ERROR: parentDeviceTypeId bad. Expeccted: 0x%.16X, Got: 0x%.16X\n",
+ 		       parentDeviceTypeId, commDevice->getDeviceTypeId());
+ 		return false;
+ 	}
+ 	// Check that device is initialized
+ 	if (!commDevice->ready()) {
+ 		printf("ERROR: parentDevice not ready\n");
+ 		return false;
+ 	}
+ 	// Check that devicePins is not longer than PIN_COUNT
+ 	if (pb.getPinCount() != PIN_COUNT) {
+ 		printf("ERROR: device pins size bad: %d, pin count = %d\n",
+ 		       pb.getPinCount(),
+ 		       PIN_COUNT);
+ 		return false;
+ 	}
+ 	// Verification done. Add any code for initialization here.
+ 	// ***************************************************************************
+ 	// Some variable setups
+ 	interfaceIndex = ifaceIndex;
+ 	// Create a base hardware descriptor that uses in invalid pin number
+ 	baseHardwareDescriptor =
+ 		HardwareDescriptor::createHardwareDescriptor(interfaceTypeId,
+ 		                                             parentDeviceTypeId,
+ 		                                             interfaceIndex,
+ 		                                             commDevice->getDeviceIndex(),
+ 		                                             HardwareDescriptor::
+ 		                                             INVALID_PIN_NUMBER);
+ 	// for (uint8_t i = 0; i < PIN_COUNT; i++) {
+ 	// pinMapToDevice[i] = devicePins[i];
+ 	// pinModes[i] = 0x10;
+ 	// }
+ 	pinBus = pb;
+ 	if (commDevice->attachInterface(pinBus, interfaceTypeId))
+ 		initSuccessful = true;
+ 	return initSuccessful;
 
-	// return true
-} /* start */
+ 	// return true
+ } /* start */
 
 /**
  * @param pinNumber TODO
@@ -158,7 +155,7 @@ inline PinState getPinState(uint8_t pin){
  * @return TODO
  */
 
-inline uint8_t getTypeId(){
+inline uint8_t getInterfaceTypeId(){
 	return interfaceTypeId;
 } // getTypeId
 

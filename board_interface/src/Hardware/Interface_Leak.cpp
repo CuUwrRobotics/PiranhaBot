@@ -3,8 +3,8 @@
  * Also interacts with telemetry interface
  */
 
- #include "../HwHeader.h"
- #include "Devices_interface.h"
+ #include "HwHeader.h"
+ #include "Devices_interfaces.h"
 
 /**
  * PowerControl
@@ -38,9 +38,9 @@ public:
  	// Check that device is the correct type
  	commDevice = device;
 	commDeviceExists = true;
- 	if (parentDeviceTypeId != commDevice->getTypeId()) {
+ 	if (parentDeviceTypeId != commDevice->getDeviceTypeId()) {
  		printf("ERROR: parentDeviceTypeId bad. Expeccted: 0x%.16X, Got: 0x%.16X\n",
- 		       parentDeviceTypeId, commDevice->getTypeId());
+ 		       parentDeviceTypeId, commDevice->getDeviceTypeId());
  		return false;
  	}
  	// Check that device is initialized
@@ -155,7 +155,7 @@ inline PinState getPinState(uint8_t pin){
  * @return TODO
  */
 
-inline uint8_t getTypeId(){
+inline uint8_t getInterfaceTypeId(){
 	return interfaceTypeId;
 } // getTypeId
 

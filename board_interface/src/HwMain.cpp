@@ -35,7 +35,7 @@
 // TODO: Convert all printf's to ROS_ERROR
 
 #include "HwHeader.h"
-#include "Devices_interface.h"
+#include "Devices_interfaces.h"
 #include "PinBus.h"
 
 #define DEVICE_ADDRESS 0x55
@@ -79,7 +79,7 @@ void dumpConfiguration(bool shrinkRepeatedPins){
 		       devices[dev]->ready() ? GREEN :
 		       RED,
 		       HardwareDescriptor::deviceIdToCharArray(
-						 devices[dev]->getTypeId()), NO_COLOR,
+						 devices[dev]->getDeviceTypeId()), NO_COLOR,
 		       devices[dev]->getPinBus().getBusTypeString(true));
 		for (uint8_t intf = 0; intf < TOTAL_INTERFACES; intf++) {
 			// if (!interfaces[intf]->ready())
@@ -96,7 +96,7 @@ void dumpConfiguration(bool shrinkRepeatedPins){
 				printf("Interface #%s%d%s, Type: %s%s%s\n", WHITE, intf,
 				       NO_COLOR, interfaces[intf]->ready() ? GREEN : RED,
 				       HardwareDescriptor::interfaceIdToCharArray(
-								 interfaces[intf]->getTypeId()), NO_COLOR);
+								 interfaces[intf]->getInterfaceTypeId()), NO_COLOR);
 				printf("%s%s", moreDevfLeft ? "│" : " ", SP); // Formatting
 				printf("%s%s", moreIntfLeft ? "│" : " ", SP); // Formatting
 				printf("└─"); // Formatting
@@ -125,7 +125,7 @@ void dumpConfiguration(bool shrinkRepeatedPins){
 						       moreIntfLeft ? "│" : " ",  SP, SP, morePinsLeft ? "├" : "└"); // Formatting
 						if (firstPin != pin && firstPin != pin - 1) {
 							pin--;
-							printf("%s[pins #%d - %d are identical]%s", D_GRAY,
+							printf("%s[also %d ... %d]%s", D_GRAY,
 							       interfaces[intf]->getDevPin(firstPin),
 							       interfaces[intf]->getDevPin(pin),
 							       NO_COLOR);

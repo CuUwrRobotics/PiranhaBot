@@ -3,19 +3,19 @@
  * Also interacts with telemetry interface
  */
 
- #include "../HwHeader.h"
- #include "Devices_interface.h"
+ #include "HwHeader.h"
+ #include "Devices_interfaces.h"
 
 /**
  * PowerControl
  * @author
  */
-class Interface_EmergIO : public Interface {
+class Interface_LeakLed : public Interface {
 private:
 // SET THESE FOR ANY NEW INTERFACE
 // ----------------------------------------------------------------------------
-const static uint8_t PIN_COUNT = 3; // number of pins
-uint8_t interfaceTypeId = HardwareDescriptor::INTF_TEL_EMERGENCY_IO; // The ID for this intf
+const static uint8_t PIN_COUNT = 1; // number of pins
+uint8_t interfaceTypeId = HardwareDescriptor::INTF_LEAK_WARN; // The ID for this intf
 uint8_t parentDeviceTypeId = HardwareDescriptor::DEVICE_GPIO; // The IF for the device
 // ----------------------------------------------------------------------------
 
@@ -38,9 +38,9 @@ public:
  	// Check that device is the correct type
  	commDevice = device;
 	commDeviceExists = true;
- 	if (parentDeviceTypeId != commDevice->getTypeId()) {
+ 	if (parentDeviceTypeId != commDevice->getDeviceTypeId()) {
  		printf("ERROR: parentDeviceTypeId bad. Expeccted: 0x%.16X, Got: 0x%.16X\n",
- 		       parentDeviceTypeId, commDevice->getTypeId());
+ 		       parentDeviceTypeId, commDevice->getDeviceTypeId());
  		return false;
  	}
  	// Check that device is initialized
@@ -155,7 +155,7 @@ inline PinState getPinState(uint8_t pin){
  * @return TODO
  */
 
-inline uint8_t getTypeId(){
+inline uint8_t getInterfaceTypeId(){
 	return interfaceTypeId;
 } // getTypeId
 

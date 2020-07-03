@@ -7,7 +7,7 @@
  */
 
  #include "HwHeader.h"
- #include "Devices_interface.h"
+ #include "Devices_interfaces.h"
  #include "PinBus.h"
 
 /**
@@ -84,7 +84,7 @@ virtual PinState getPinState(uint8_t pin) = 0;
 /*
  * @return This interface's type ID.
  */
-virtual uint8_t getTypeId() = 0;
+virtual uint8_t getInterfaceTypeId() = 0;
 
 /*
  * @return The parent device's index.
