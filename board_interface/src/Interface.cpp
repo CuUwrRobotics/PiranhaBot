@@ -144,6 +144,14 @@ inline uint8_t getParentDeviceIndex(){
 	return commDevice->getDeviceIndex();
 } // getParentDeviceIndex
 
+/*
+ * @return This devices index.
+ */
+
+inline uint8_t getInterfaceIndex(){
+	return interfaceIndex;
+} // getParentDeviceIndex
+
 /**
  * @return TODO
  */

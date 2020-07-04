@@ -47,8 +47,12 @@ const PinState validPinStates[VALID_PIN_STATE_COUNT] = {STATE_ON,
 // Other Variables (Don't change these)
 // ====================================
 uint8_t reservedPins[PIN_COUNT];
-uint16_t currentPinValues[PIN_COUNT];
-uint16_t requestedPinValues[PIN_COUNT];
+// For storing tick rate (duty cycle)
+uint16_t currentPinTicks[PIN_COUNT];
+uint16_t requestedPinTicks[PIN_COUNT];
+// For storing device frequncy
+uint16_t currentFrequencyValue;
+uint16_t requestedFrequencyValue;
 
 /* These give the base Device class access to the above local variables. They
  * don't need any modification. See more info about each function in the Device
@@ -140,10 +144,15 @@ public:
 
 // Simple retuning function which needs no modification.
 inline uint16_t getPinValue(uint8_t pin, DataType dataType){
-	return currentPinValues[pin];
+	if (dataType == PACKET_PWM_FREQ)
+		return currentFrequencyValue;
+	if (dataType == PACKET_PWM_ON_TICKS)
+		return currentPinTicks[pin];
+	return 0;
 } // getPinValue
 
 /**
+ * Note that all data handling (min/max vals) happens in interfaces
  * @param pin TODO
  * @param struct PinDataPin data which MUST contain the PWM on time ticks.
  * @param interfaceId TODO
@@ -159,9 +168,25 @@ bool setPinValue(uint8_t pin, uint16_t *data, DataType dataType,
 		return false;
 	}
 	if (pin >= 0 && pin < PIN_COUNT) {
-		requestedPinValues[pin] = data[0];
-		writeDataPending = true;
-		return true;
+		if (dataType == PACKET_PWM_FREQ) {
+			if (data[0] == currentFrequencyValue) return true;
+			else {
+				requestedFrequencyValue = data[0];
+				writeDataPending = true;
+				return true;
+			}
+		} else if (dataType = PACKET_PWM_ON_TICKS) {
+			if (data[0] == requestedPinTicks[pin]) return true;
+			else {
+				requestedPinTicks[pin] = data[0];
+				writeDataPending = true;
+				return true;
+			}
+		} else {
+			ROS_ERROR("setPinValue for device index %d got bad data type %d.",
+			          deviceIndex, dataType);
+			return false;
+		}
 	}
 	ROS_ERROR("setPinValue for device index %d got bad pin %d.",
 	          deviceIndex, pin);
@@ -195,27 +220,23 @@ bool updateData(){
 		// READ DATA HERE
 		for (uint8_t pin = 0; pin < PIN_COUNT; pin++) {
 			if (pinIsReadable(pin)) { // If pin should be read
-				currentPinValues[pin] = 0; // Just set to zero
+				currentPinTicks[pin] = 0; // Just set to zero
 			}
 		}
 	}
 	// Check if any data needs to be written. If so, write it.
 	if (writeDataPending) {
-		printf("Writing data to pins (TODO).\n");
-		// NOTE: this process depends highly on the device being written to.
-		// First, set any pin states
-		for (uint8_t pin = 0; pin < PIN_COUNT; pin++) {
-			currentPinBus.setPinState(pin, requestedPinBus.getPinState(pin));
-		}
+		printf("Writing data to pins (TODO). %d\n", requestedFrequencyValue);
 		uint16_t pinValuesToSend[PIN_COUNT] = {0};
 		// For each pin, check if pin is in read mode. if not, write the value over.
 		for (uint8_t pin = 0; pin < PIN_COUNT; pin++) { // For each pin
-			if (pinIsReadable(pin)) {
-				pinValuesToSend[pin] = 0; // Set data to zero for non-writable pins
-			} else {
-				pinValuesToSend[pin] = requestedPinValues[pin]; // Pin is set up for write, so
-				currentPinValues[pin] = requestedPinValues[pin];
-			}
+			// if (pinIsReadable(pin)) {
+			// pinValuesToSend[pin] = 0; // Set data to zero for non-writable pins
+			// } else {
+			pinValuesToSend[pin] = requestedPinTicks[pin]; // Pin is set up for write, so
+			currentPinTicks[pin] = requestedPinTicks[pin];
+			currentFrequencyValue = requestedFrequencyValue;
+			// }
 		}
 		// WRITE DATA HERE
 		writeDataPending = false;

@@ -106,11 +106,6 @@ uint8_t writePin(uint8_t pinNumber, uint16_t *data, DataType dataType,
 		ROS_ERROR("writePin: Recieved invalid dataType.\n");
 		return 0;
 	}
-
-	/* Code to assign pin goes here. The specific code depends on the device to
-	 * connect to. Data must be formatted and then sent off to the parent device.
-	 * This codes is an example for PWM.
-	 */
 	uint16_t dataForDevice;
 	DataType dataTypeForDevice;
 	if (dataType == PACKET_PWM_FREQ) {
@@ -139,7 +134,6 @@ uint8_t writePin(uint8_t pinNumber, uint16_t *data, DataType dataType,
 		ROS_ERROR("writePin: Recieved invalid dataType: %d\n", dataType);
 		return 0;
 	} // Parent device expects data format PACKET_PWM_ON_TICKS
-	// printf("Writing: %d", dataForDevice);
 	return commDevice->setPinValue(pinBus.getPin(pinNumber), &dataForDevice,
 	                               dataTypeForDevice, interfaceTypeId);
 } /* writePin */
