@@ -37,6 +37,7 @@
 #include "HwHeader.h"
 #include "Devices_interfaces.h"
 #include "PinBus.h"
+#include "PinData.h"
 
 #define DEVICE_ADDRESS 0x55
 
@@ -161,7 +162,6 @@ void dumpConfiguration(bool shrinkRepeatedPins){
 						printf("\n"); // Formatting
 					}
 				}
-				// interfaces[intf]->printPins(); // prints pins to console
 			}
 		}
 	}

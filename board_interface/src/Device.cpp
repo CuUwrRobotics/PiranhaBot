@@ -118,7 +118,7 @@ virtual uint8_t getDeviceTypeId() = 0;
  * @return Pin value of the given pin
  */
 
-virtual PIN_VALUE_DATA_TYPE getPinValue(uint8_t i) = 0;
+virtual uint16_t getPinValue(uint8_t pin, DataType dataType) = 0;
 
 /**
  * Used to set the value of a pin for devices where on/off states are not enough.
@@ -126,7 +126,7 @@ virtual PIN_VALUE_DATA_TYPE getPinValue(uint8_t i) = 0;
  * @return If settign was successful.
  */
 
-virtual bool setPinValue(uint8_t pin, PIN_VALUE_DATA_TYPE value,
+virtual bool setPinValue(uint8_t pin, uint16_t *data, DataType dataType,
                          uint8_t interfaceId) = 0;
 
 /**

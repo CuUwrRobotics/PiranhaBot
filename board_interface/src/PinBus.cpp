@@ -22,14 +22,15 @@ inline bool PinBus::setPin(uint8_t pin, PinMode mode, PinState
 
 bool PinBus::setPinMode(uint8_t index, PinMode mode){
 	if (mode == MODE_INVALID) {
-		printf("ERROR: invalid mode selected\n");
+		ROS_ERROR("PinBus::setPinMode: invalid mode selected\n");
 		return false;
 	}
 	if (!(index < 0 || index > MAX_PINS)) {
 		pinModes[index] = mode;
 		return true;
 	}
-	printf("BAD PIN CONFIG: Bad pin index: %d, can't assign mode.\n", index);
+	ROS_ERROR("PinBus::setPinMode: Bad pin index: %d, can't assign mode.\n",
+	          index);
 	return false;
 } // setPinMode
 
@@ -40,14 +41,15 @@ bool PinBus::setPinMode(uint8_t index, PinMode mode){
 
 bool PinBus::setPinState(uint8_t index, PinState state){
 	if (state == STATE_INVALID) {
-		printf("BAD PIN CONFIG: invalid state selected\n");
+		ROS_ERROR("PinBus::setPinState: invalid state selected\n");
 		return false;
 	}
 	if (!(index < 0 || index >= MAX_PINS)) {
 		pinStates[index] = state;
 		return true;
 	}
-	printf("BAD PIN CONFIG: Bad index number: %d, can't assign state.\n", index);
+	ROS_ERROR("PinBus::setPinState: Bad index number: %d, can't assign state.\n",
+	          index);
 	return false;
 } // setPinState
 
@@ -88,8 +90,8 @@ inline bool PinBus::setPins(const PinMode *modes, const
 
 bool PinBus::setAllPins(PinMode mode, PinState state) {
 	if (pinCount == MAX_PINS + 1) {
-		printf(
-			"BAD PIN CONFIG: Pin count not yet set, can't assign states/modes.\n");
+		ROS_ERROR(
+			"PinBus::setAllPins: Pin count not yet set, can't assign states/modes.\n");
 		return false;
 	}
 	for (uint8_t i = 0; i < pinCount; i++) {
@@ -106,12 +108,14 @@ bool PinBus::setAllPins(PinMode mode, PinState state) {
 
 bool PinBus::setPinStates(const PinState *states){
 	if (pinCount == MAX_PINS + 1) {
-		printf("BAD PIN CONFIG: Pin count not yet set, can't assign states.\n");
+		ROS_ERROR(
+			"PinBus::setPinStates: Pin count not yet set, can't assign states.\n");
 		return false;
 	}
 	for (uint8_t i = 0; i < pinCount; i++) {
 		if (states[i] == STATE_INVALID) {
-			printf("BAD PIN CONFIG: Invalid state selected for pin #%d\n", i);
+			ROS_ERROR("PinBus::setPinStates: Invalid state selected for pin #%d\n",
+			          i);
 			continue;
 		}
 		pinStates[i] = states[i];
@@ -126,12 +130,13 @@ bool PinBus::setPinStates(const PinState *states){
 
 bool PinBus::setPinModes(const PinMode *modes){
 	if (pinCount == MAX_PINS + 1) {
-		printf("BAD PIN CONFIG: Pin count not yet set, can't assign modes.\n");
+		ROS_ERROR(
+			"PinBus::setPinModes: Pin count not yet set, can't assign modes.\n");
 		return false;
 	}
 	for (uint8_t i = 0; i < pinCount; i++) {
 		if (modes[i] == MODE_INVALID) {
-			printf("BAD PIN CONFIG: Invalid mode selected for pin #%d\n", i);
+			ROS_ERROR("PinBus::setPinModes: Invalid mode selected for pin #%d\n", i);
 			continue;
 		}
 		pinModes[i] = modes[i];
@@ -142,12 +147,14 @@ bool PinBus::setPinModes(const PinMode *modes){
 // Assign a pin. Can only happen once per pin.
 bool PinBus::assignPin(uint8_t index, uint8_t pinNumber) {
 	if (pinCount == MAX_PINS + 1) {
-		printf("BAD PIN CONFIG: pinCount not yet set, cannot assign pin\n", index);
+		ROS_ERROR("PinBus::assignPin: pinCount not yet set, cannot assign pin\n",
+		          index);
 		return false;
 	}
 	// Check index
 	if ((index < 0 || index >= pinCount)) {
-		printf("BAD PIN CONFIG: Could not find pin for assignment: %d\n", index);
+		ROS_ERROR("PinBus::assignPin: Could not find pin for assignment: %d\n",
+		          index);
 		return false;
 	}
 	pinAssignments[index] = pinNumber;
@@ -162,8 +169,8 @@ bool PinBus::assignPins(uint8_t *pinNumbers, uint8_t pinNumbersLength){
 	}
 	// Verify lengths
 	if ((pinNumbersLength < 0 || pinNumbersLength > pinCount)) {
-		printf("BAD PIN CONFIG: Bad pin count for assignment: %d\n",
-		       pinNumbersLength);
+		ROS_ERROR("PinBus::assignPins: Bad pin count for assignment: %d\n",
+		          pinNumbersLength);
 		return false;
 	}
 	for (uint8_t pin = 0; pin < pinCount; pin++)
@@ -178,7 +185,8 @@ bool PinBus::assignPins(uint8_t *pinNumbers, uint8_t pinNumbersLength){
  */
 bool PinBus::assignPinSet(uint8_t startPin, uint8_t endPin) {
 	if (startPin > endPin) {
-		printf("BAD PIN CONFIG: assign pins: start value cannot be morethan end\n");
+		ROS_ERROR(
+			"PinBus::assignPinSet: assign pins: start value cannot be morethan end\n");
 		return false;
 	}
 	uint8_t newPinCount = (endPin - startPin) + 1; // Get a new pin count
@@ -186,15 +194,15 @@ bool PinBus::assignPinSet(uint8_t startPin, uint8_t endPin) {
 	if (pinCount == MAX_PINS + 1) {
 		// Verify the new pin count
 		if (newPinCount <= 0 || newPinCount > MAX_PINS) {
-			printf(
-				"BAD PIN CONFIG: assign pins: bad pin count computed from start/end values\n");
+			ROS_ERROR(
+				"PinBus::assignPinSet: assign pins: bad pin count computed from start/end values\n");
 			return false;
 		}
 		pinCount = newPinCount;
 		// return true;
 	}	else if (pinCount != newPinCount) {
-		printf(
-			"BAD PIN CONFIG: assign pins: pin count computed from start / end values does not match preset pin count\n");
+		ROS_ERROR(
+			"PinBus::assignPinSet: assign pins: pin count computed from start / end values does not match preset pin count\n");
 		return false;
 	}
 	// Make assignemnts
@@ -226,7 +234,7 @@ inline uint8_t PinBus::getPinCount() {
 
 bool PinBus::setBusType(BusType type) {
 	if (busType != BUS_INVALID) {
-		printf("BAD PIN CONFIG: Bus type already assigned!\n");
+		ROS_ERROR("PinBus::setBusType: Bus type already assigned!\n");
 		return false;
 	}
 	busType = type;
@@ -240,14 +248,14 @@ bool PinBus::setBusType(BusType type) {
 
 bool PinBus::setPinCount(uint8_t count) {
 	if (pinCount != MAX_PINS + 1) {
-		printf("BAD PIN CONFIG: Pin count already assigned!\n");
+		ROS_ERROR("PinBus::setPinCount: Pin count already assigned!\n");
 		return false;
 	}
 	if (!(count < 0 || count > MAX_PINS)) {
 		pinCount = count;
 		return true;
 	}
-	printf("BAD PIN CONFIG: Bad pin count: %d\n", count);
+	printf("PinBus::setPinCount: Bad pin count: %d\n", count);
 	return false;
 } // setBusType
 
@@ -386,7 +394,7 @@ char *PinBus::getModeString(uint8_t pin, bool colorizeBadOutputs) {
 	default:
 		if (colorizeBadOutputs)
 			return "\033[1;31munknown_mode\033[0m";
-		else return "unknown_bus";
+		else return "unknown_mode";
 		break;
 	} // switch
 } // busTypeIs
@@ -418,7 +426,7 @@ char *PinBus::getStateString(uint8_t pin, bool colorizeBadOutputs) {
 	default:
 		if (colorizeBadOutputs)
 			return "\033[1;31munknown_state\033[0m";
-		else return "unknown_bus";
+		else return "unknown_state";
 		break;
 	} // switch
 } // busTypeIs
@@ -455,7 +463,7 @@ char *PinBus::getBusTypeString(bool colorizeBadOutputs){
 } // PinBus::getBusTypeString
 
 /**
- * @return TODO
+ * Quick dump of pin configuration.
  */
 
 void PinBus::dumpInfo(bool colorful = true) {

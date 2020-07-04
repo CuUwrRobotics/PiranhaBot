@@ -4,6 +4,7 @@
 // Generic headers
 #include "HwHeader.h"
 #include "Devices_interfaces.h"
+#include "PinData.h"
 
 // Header file custom to this specific chip
 #include "Device_Gpio_Mcp23017.h"
@@ -49,9 +50,9 @@ const PinState validPinStates[VALID_PIN_STATE_COUNT] = {STATE_ON,
 // Other Variables (Don't change these)
 // ====================================
 uint8_t reservedPins[PIN_COUNT];
-// Adjustable datatype in case of any future expansion
-PIN_VALUE_DATA_TYPE currentPinValues[PIN_COUNT];
-PIN_VALUE_DATA_TYPE requestedPinValues[PIN_COUNT];
+// No pin values for GPIO, only states
+// uint16_t currentPinValues[PIN_COUNT];
+// uint16_t requestedPinValues[PIN_COUNT];
 
 /* These give the base Device class access to the above local variables. They
  * don't need any modification. See more info about each function in the Device
@@ -142,7 +143,7 @@ bool deviceInit(){
 public:
 
 // No pin values for GPIO, only states
-inline PIN_VALUE_DATA_TYPE getPinValue(uint8_t i){
+inline uint16_t getPinValue(uint8_t pin, DataType dataType){
 	return 0;
 } // getPinValue
 
@@ -153,7 +154,8 @@ inline PIN_VALUE_DATA_TYPE getPinValue(uint8_t i){
  * @return TODO
  */
 
-bool setPinValue(uint8_t pin, PIN_VALUE_DATA_TYPE value, uint8_t interfaceId) {
+bool setPinValue(uint8_t pin, uint16_t *data, DataType dataType, uint8_t
+                 interfaceId) {
 	return false; // No values for this interface, only pin state whould be changed
 	// if (getReservedPins(pinBus.getPin(i)) != interfaceId) {
 	// 	ROS_ERROR(
@@ -197,7 +199,7 @@ bool updateData(){
 		// READ DATA HERE
 		for (uint8_t pin = 0; pin < PIN_COUNT; pin++) {
 			if (pinIsReadable(pin)) { // If pin should be read
-				currentPinValues[pin] = 0; // Just set to zero
+				// currentPinValues[pin] = 0; // Just set to zero
 			}
 		}
 	}
@@ -210,7 +212,7 @@ bool updateData(){
 			currentPinBus.setPinState(pin, requestedPinBus.getPinState(pin));
 		}
 		// No values for this interface
-		// PIN_VALUE_DATA_TYPE pinValuesToSend[PIN_COUNT] = {0};
+		// uint16_t pinValuesToSend[PIN_COUNT] = {0};
 		// // For each pin, check if pin is in read mode. if not, write the value over.
 		// for (uint8_t pin = 0; pin < PIN_COUNT; pin++) { // For each pin
 		// 	if (pinIsReadable(pin)) {

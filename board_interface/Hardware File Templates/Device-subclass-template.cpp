@@ -48,9 +48,8 @@ const PinState validPinStates[VALID_PIN_STATE_COUNT] = {STATE_ON,
 // Other Variables (Don't change these)
 // ====================================
 uint8_t reservedPins[PIN_COUNT];
-// Adjustable datatype in case of any future expansion
-PIN_VALUE_DATA_TYPE currentPinValues[PIN_COUNT];
-PIN_VALUE_DATA_TYPE requestedPinValues[PIN_COUNT];
+uint16_t currentPinValues[PIN_COUNT];
+uint16_t requestedPinValues[PIN_COUNT];
 
 /* These give the base Device class access to the above local variables. They
  * don't need any modification. See more info about each function in the Device
