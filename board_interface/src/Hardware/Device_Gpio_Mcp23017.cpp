@@ -147,7 +147,7 @@ bool setPinValue(uint8_t pin, uint16_t *data, DataType dataType, uint8_t
 	// If pin is not going to be in output mode, don't set it.
 	if (pinIsReadable(pin)) {
 		// Error is silenceable for BIT testing.
-		ROS_ERROR(
+		ROS_INFO(
 			"setPinValue for device index %d was told to write to a pin in a reading mode.",
 			deviceIndex);
 		return false;

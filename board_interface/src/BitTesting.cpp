@@ -32,6 +32,19 @@ bool testPwm(Interface *intf, Device *dev, bool direction) {
 		return false;
 	}
 
+	// Make sure pin modes can't be altred by the interface
+	hd = intf->getHardwareDescriptor(0);
+	intf->setPinMode(0, MODE_INPUT, hd);
+	dev->updateData();
+	if (intf->getPinMode(0) != MODE_OUTPUT) {
+		printf(
+			"%sPWM interface's pin modes was changed from output, which should not be possible.%s\n",
+			RED, NO_COLOR);
+		intf->setPinMode(0, MODE_INPUT, hd); // Fix the mode
+		dev->updateData();
+		returnVal = false; // Return failure for test
+	}
+
 	frequency = 0xFFFF; // Set to maximum value; should get brought down to 3500
 	// Writes frequency to a different pin than is chacked later, since this
 	// should be set universally.
@@ -74,6 +87,13 @@ bool testPwm(Interface *intf, Device *dev, bool direction) {
 	for (int i = 0; i < 80; i++)
 		printf(":");
 	printf("%s\n", NO_COLOR);
+
+// Turn everything back off
+	for (int pin = 0; pin < intf->getPinCount(); pin++) {
+		hd = intf->getHardwareDescriptor(pin);
+		data = 0;
+		intf->writePin(pin, &data, PACKET_PWM_ON_TICKS, hd);
+	}
 
 	return returnVal;
 	// }
@@ -229,7 +249,7 @@ bool testGpio(Interface *intf, Device *dev) {
 					returnVal = false;
 				}
 				printf("%s%s", (dataGood ? GREEN : RED),
-				       (data ? "." : "'"));
+				       (data ? "'" : "."));
 			}
 			printf("%s|\n", NO_COLOR);
 			// data = dev->getPinValue(0, PACKET_PWM_DUTY_100);
@@ -259,7 +279,7 @@ bool testGpio(Interface *intf, Device *dev) {
 				returnVal = false;
 			}
 			printf("%s%s", (dataGood ? GREEN : RED),
-			       (data ? "." : "'"));
+			       (data ? "'" : "."));
 		}
 		printf("%s|\n", NO_COLOR);
 	}
@@ -269,8 +289,353 @@ bool testGpio(Interface *intf, Device *dev) {
 		printf(":");
 	printf("%s\n", NO_COLOR);
 
+	// Reset all pins
+	for (int pin = 0; pin < intf->getPinCount(); pin++) { // Assign pins
+		hd = intf->getHardwareDescriptor(pin);
+		data = 0;
+		intf->writePin(pin, &data, PACKET_GPIO_STATE, hd);
+	}
+	// Set all pins as inputs
+	for (int pin = 0; pin < intf->getPinCount(); pin++) {
+		hd = intf->getHardwareDescriptor(pin);
+		intf->setPinMode(pin, MODE_INPUT, hd);
+	}
+	dev->updateData();
+
 	return returnVal;
-} // testPwm
+} // testGpio
+
+/**
+ * @param intf TODO
+ * @param dev TODO
+ * @param direction TODO
+ * @return TODO
+ */
+
+bool testPower(Interface *intf, Device *dev) {
+	bool returnVal = true;
+	uint64_t hd;
+	uint16_t data;
+	uint16_t correctData;
+	bool dataGood;
+
+	printf("%s", YELLOW);
+	for (int i = 0; i < 80; i++)
+		printf(":");
+	printf("%s\n", NO_COLOR);
+	printf("POWER test beginning.\n\tInterface:\t%s%d%s\n\tDevice:\t\t%s%d%s\n",
+	       WHITE, intf->getInterfaceIndex(), NO_COLOR,
+	       WHITE, dev->getDeviceIndex(), NO_COLOR);
+	if (intf->getParentDeviceIndex() != dev->getDeviceIndex()) {
+		printf("%sFailed test! Interface does not match parent device.%s",
+		       RED, NO_COLOR);
+		return false;
+	}
+
+	// Tests pin modes
+	// ***************************************************************************
+	printf("Pin Modes Test\n");
+	printf("Results:\n========\n");
+	printf("\tPin modes:\t|");
+	for (int pin = 0; pin < intf->getPinCount(); pin++) {
+		hd = intf->getHardwareDescriptor(pin);
+		data = intf->getPinMode(pin);
+		if (data == MODE_OUTPUT)
+			dataGood = true;
+		else {
+			dataGood = false;
+			returnVal = false;
+		}
+		printf("%s%s", dataGood ? GREEN : RED, (data == MODE_OUTPUT) ? "O" : "I" );
+	}
+	printf("%s|\n", NO_COLOR);
+
+	// Sets one pin per cycle to low (first) then high over 32 total cycles
+	// ***************************************************************************
+	for (int highLow = 0; highLow < 2; highLow++) {
+		printf("Incrementing %s Test\n", (highLow ? "ON" : "OFF"));
+		printf("Results:\n========\n");
+		for (int cycle = 0; cycle < intf->getPinCount(); cycle++) { // Run 16 times
+			for (int pin = 0; pin < intf->getPinCount(); pin++) { // Assign pins
+				hd = intf->getHardwareDescriptor(pin);
+				data = ((pin == cycle) == highLow); // Set one pin per cycle to HIGH
+				intf->writePin(pin, &data, PACKET_GPIO_STATE, hd);
+			}
+
+			dev->updateData(); // Push data out to the chip
+			printf("\tCycle %d Pins:\t|", cycle);
+			for (int pin = 0; pin < intf->getPinCount(); pin++) { // Check pins
+				data = intf->readPin(pin, PACKET_GPIO_STATE); // Get actual pin data
+				correctData = ((pin == cycle) == highLow); // Get the intended data
+				if (data == correctData) // Check pin data
+					dataGood = true;
+				else {
+					dataGood = false;
+					returnVal = false;
+				}
+				printf("%s%s", (dataGood ? GREEN : RED),
+				       (data ? "'" : "."));
+			}
+			printf("%s|\n", NO_COLOR);
+			// data = dev->getPinValue(0, PACKET_PWM_DUTY_100);
+			// // printf("pin data: ");
+		}
+	}
+
+	// Sets pins to 0101 pattern, then 1010
+	// ***************************************************************************
+	printf("Patterned Test\n");
+	printf("Results:\n========\n");
+	for (int highLow = 0; highLow < 2; highLow++) {
+		for (int pin = 0; pin < intf->getPinCount(); pin++) { // Assign pins
+			hd = intf->getHardwareDescriptor(pin);
+			data = ((pin % 2) == highLow); // Set one pin per cycle to HIGH
+			intf->writePin(pin, &data, PACKET_GPIO_STATE, hd);
+		}
+		dev->updateData(); // Push data out to the chip
+		printf("\tPins:\t\t|");
+		for (int pin = 0; pin < intf->getPinCount(); pin++) { // Check pins
+			data = intf->readPin(pin, PACKET_GPIO_STATE); // Get actual pin data
+			correctData = ((pin % 2) == highLow); // Get the intended data
+			if (data == correctData) // Check pin data
+				dataGood = true;
+			else {
+				dataGood = false;
+				returnVal = false;
+			}
+			printf("%s%s", (dataGood ? GREEN : RED),
+			       (data ? "'" : "."));
+		}
+		printf("%s|\n", NO_COLOR);
+	}
+
+	printf("%s", YELLOW);
+	for (int i = 0; i < 80; i++)
+		printf(":");
+	printf("%s\n", NO_COLOR);
+
+	// Reset all pins
+	for (int pin = 0; pin < intf->getPinCount(); pin++) { // Assign pins
+		hd = intf->getHardwareDescriptor(pin);
+		data = 0;
+		intf->writePin(pin, &data, PACKET_GPIO_STATE, hd);
+	}
+	dev->updateData();
+
+	return returnVal;
+	// }
+} // testPower
+
+/**
+ * @param intf TODO
+ * @param dev TODO
+ * @param direction TODO
+ * @return TODO
+ */
+
+bool testLeak(Interface *intf, Device *dev) {
+	bool returnVal = true;
+	uint64_t hd;
+	uint16_t data;
+	uint16_t correctData;
+	bool dataGood;
+	bool hasLeak;
+
+	printf("%s", YELLOW);
+	for (int i = 0; i < 80; i++)
+		printf(":");
+	printf("%s\n", NO_COLOR);
+	printf("LEAK test beginning.\n\tInterface:\t%s%d%s\n\tDevice:\t\t%s%d%s\n",
+	       WHITE, intf->getInterfaceIndex(), NO_COLOR,
+	       WHITE, dev->getDeviceIndex(), NO_COLOR);
+	if (intf->getParentDeviceIndex() != dev->getDeviceIndex()) {
+		printf("%sFailed test! Interface does not match parent device.%s",
+		       RED, NO_COLOR);
+		return false;
+	}
+
+	// Tests pin modes (need all to be input)
+	// ***************************************************************************
+	printf("Pin Modes Test\n");
+	printf("Results:\n========\n");
+	printf("\tPin modes:\t|");
+	for (int pin = 0; pin < intf->getPinCount(); pin++) {
+		hd = intf->getHardwareDescriptor(pin);
+		data = intf->getPinMode(pin);
+		if (data == MODE_INPUT)
+			dataGood = true;
+		else {
+			dataGood = false;
+			returnVal = false;
+		}
+		printf("%s%s", dataGood ? GREEN : RED, (data == MODE_OUTPUT) ? "O" : "I" );
+	}
+	printf("%s|\n", NO_COLOR);
+
+	// Make sure pin modes can't be altred by the interface
+	hd = intf->getHardwareDescriptor(0);
+	intf->setPinMode(0, MODE_OUTPUT, hd);
+	dev->updateData();
+	if (intf->getPinMode(0) != MODE_INPUT) {
+		printf(
+			"%sLEAK interface's pin modes was changed from input, which should not be possible.%s\n",
+			RED, NO_COLOR);
+		intf->setPinMode(0, MODE_INPUT, hd); // Fix the mode
+		dev->updateData();
+		returnVal = false; // Return failure for test
+	}
+
+	// Tests pin states (should all be LOW)
+	// ***************************************************************************
+	dev->updateData(); // Read leak data
+	printf("Leak check test\n");
+	printf("Results:\n========\n");
+	printf("\tPin states:\t|");
+	for (int pin = 0; pin < intf->getPinCount(); pin++) { // Check pins
+		data = intf->readPin(pin, PACKET_GPIO_STATE); // Get actual pin data
+		if (data == 0) // Check pin data
+			dataGood = true;
+		else {
+			dataGood = false;
+			returnVal = false;
+			hasLeak = true;
+		}
+		printf("%s%s", (dataGood ? GREEN : RED),
+		       (data ? "X" : "."));
+	}
+	printf("%s|\n", NO_COLOR);
+	if (returnVal) {
+		printf("%sLeak interface test passed.%s\n", GREEN, NO_COLOR);
+	} else {
+		printf("%sFAILED: Leak interface test has not passed.%s\n", RED, NO_COLOR);
+		if (hasLeak)
+			ROS_ERROR("LEAK INTERFACE HAS DETECTED A LEAK!");
+	}
+
+	printf("%s", YELLOW);
+	for (int i = 0; i < 80; i++)
+		printf(":");
+	printf("%s\n", NO_COLOR);
+
+	return returnVal;
+} // testLeak
+
+/**
+ * @param intf TODO
+ * @param dev TODO
+ * @return TODO
+ */
+
+bool testEmergencyIo(Interface *intf, Device *dev) {
+	bool returnVal = true;
+	uint64_t hd;
+	uint16_t data;
+
+	printf("%s", YELLOW);
+	for (int i = 0; i < 80; i++)
+		printf(":");
+	printf("%s\n", NO_COLOR);
+	printf(
+		"EMERG_IO test beginning.\n\tInterface:\t%s%d%s\n\tDevice:\t\t%s%d%s\n",
+		WHITE, intf->getInterfaceIndex(), NO_COLOR,
+		WHITE, dev->getDeviceIndex(), NO_COLOR);
+	if (intf->getParentDeviceIndex() != dev->getDeviceIndex()) {
+		printf("%sFailed test! Interface does not match parent device.%s",
+		       RED, NO_COLOR);
+		return false;
+	}
+
+	printf("No test for Emergency IO yet. This is a placeholder.\n");
+
+	printf("%s", YELLOW);
+	for (int i = 0; i < 80; i++)
+		printf(":");
+	printf("%s\n", NO_COLOR);
+
+	return returnVal;
+} // testEmergencyIo
+
+/**
+ * @param intf TODO
+ * @param dev TODO
+ * @return TODO
+ */
+
+bool testLeakLed(Interface *intf, Device *dev) {
+	bool returnVal = true;
+	uint64_t hd;
+	uint16_t data;
+
+	printf("%s", YELLOW);
+	for (int i = 0; i < 80; i++)
+		printf(":");
+	printf("%s\n", NO_COLOR);
+	printf(
+		"LEAK_LED test beginning.\n\tInterface:\t%s%d%s\n\tDevice:\t\t%s%d%s\n",
+		WHITE, intf->getInterfaceIndex(), NO_COLOR,
+		WHITE, dev->getDeviceIndex(), NO_COLOR);
+	if (intf->getParentDeviceIndex() != dev->getDeviceIndex()) {
+		printf("%sFailed test! Interface does not match parent device.%s",
+		       RED, NO_COLOR);
+		return false;
+	}
+
+	// Tests pin mode (should be output)
+	// ***************************************************************************
+	printf("Pin mode test\n");
+	printf("Results:\n========\n");
+	hd = intf->getHardwareDescriptor(0);
+	intf->setPinMode(0, MODE_INPUT, hd);
+	dev->updateData();
+	if (intf->getPinMode(0) != MODE_OUTPUT) {
+		printf(
+			"%sLEAK_LED interface's pin modes was changed from output, which should not be possible.%s\n",
+			RED, NO_COLOR);
+		intf->setPinMode(0, MODE_OUTPUT, hd); // Fix the mode
+		dev->updateData();
+		returnVal = false; // Return failure for test
+	} else printf("%sPin mode test successful.%s\n", GREEN, NO_COLOR);
+
+	// Tests pin states
+	// ***************************************************************************
+	printf("LED power test\n");
+	printf("Results:\n========\n");
+	// On
+	hd = intf->getHardwareDescriptor(0);
+	data = 1; // Set one pin per cycle to HIGH
+	intf->writePin(0, &data, PACKET_GPIO_STATE, hd);
+	dev->updateData();
+	if (!intf->readPin(0, PACKET_GPIO_STATE)) {
+		printf("%sCould not turn on Leak LED%s\n", RED, NO_COLOR);
+		returnVal = false;
+	} else {
+		printf("%sLeak LED turned on successfully.%s\n", GREEN, NO_COLOR);
+	}
+
+	// Off
+	data = 0; // Set one pin per cycle to HIGH
+	intf->writePin(0, &data, PACKET_GPIO_STATE, hd);
+	dev->updateData();
+	if (intf->readPin(0, PACKET_GPIO_STATE)) {
+		printf("%sCould not turn on Leak LED%s\n", RED, NO_COLOR);
+		returnVal = false;
+	} else {
+		printf("%sLeak LED is now off.%s\n", GREEN, NO_COLOR);
+	}
+
+	if (returnVal) {
+		printf("%sLeak LED test successful.%s\n", GREEN, NO_COLOR);
+	} else {
+		ROS_ERROR("%sLeak LED test failed.%s\n", RED, NO_COLOR);
+	}
+
+	printf("%s", YELLOW);
+	for (int i = 0; i < 80; i++)
+		printf(":");
+	printf("%s\n", NO_COLOR);
+
+	return returnVal;
+} // testLeakLed
 
 /**
  * Fancy display of all devices, interfaces, and pins.

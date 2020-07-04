@@ -199,8 +199,24 @@ void runBitTest(){
 	// ===========
 	if (!testGpio(interfaces[0], devices[0])) testsOk = false;
 	if (!testGpio(interfaces[1], devices[1])) testsOk = false;
-	// if (!testGpio(interfaces[7], devices[4])) testsOk = false;
-	// if (!testGpio(interfaces[7], devices[4])) testsOk = false;
+
+	// POWER testing
+	// ===========
+	if (!testPower(interfaces[3], devices[2])) testsOk = false;
+
+	// LEAK testing
+	// ===========
+	if (!testLeak(interfaces[2], devices[2])) testsOk = false;
+
+	// EMERG_IO testing
+	// ================
+	if (!testEmergencyIo(interfaces[4], devices[2])) testsOk = false;
+
+	// LEAK_LED testing
+	// ================
+	if (!testLeakLed(interfaces[5], devices[2])) testsOk = false;
+
+	// All tests done
 	if (!testsOk) {
 		printf(
 			"%sWARINING: AT LEAST ONE BIT TEST HAS FAILED. Read the data above to find the reason.%s\n",

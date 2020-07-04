@@ -46,8 +46,22 @@ inline uint8_t getPinCount(){
 	return PIN_COUNT;
 } // getPinCount
 
+//
+inline char *getInterfaceName(){
+	return INTERFACE_NAME;
+} // getPinCount
+
 /* These must be changed per interface to ensure operability.
  *****************************************************************************/
+
+/** Called at init. Should assign default modes to the pinBus object.
+ * updateData() will be called after this, so there's no needto call it here.
+ */
+
+void setDefaultModes(){
+	pinBus.setAllPins(MODE_INPUT);
+	commDevice->setPinModes(pinBus, interfaceTypeId);
+}  // setDefaultModes
 
 /**
  * Reads data from the comm device and formats into requested data format, if possible.
@@ -57,16 +71,6 @@ inline uint8_t getPinCount(){
  */
 
 uint16_t readPin(uint8_t pin, DataType dataType) {
-	// Requested format is available directly from device
-	if (dataType == PACKET_PWM_FREQ ||
-	    dataType == PACKET_PWM_ON_TICKS)
-		return commDevice->getPinValue(pinBus.getPin(pin),
-		                               dataType);
-	// If program got here, data reformatting is needed from any other possible formats
-	if (dataType == PACKET_INVALID) {
-		ROS_ERROR("readPin: Recieved invalid format.\n");
-		return 0;
-	}
 	if (dataType == PACKET_GPIO_STATE) {
 		return commDevice->getPinValue(pinBus.getPin(pin),
 		                               PACKET_GPIO_STATE);
@@ -99,11 +103,6 @@ uint8_t writePin(uint8_t pinNumber, uint16_t *data, DataType dataType,
 		ROS_ERROR("writePin: Recieved invalid format.\n");
 		return 0;
 	}
-
-	/* Code to assign pin goes here. The specific code depends on the device to
-	 * connect to. Data must be formatted and then sent off to the parent device.
-	 * This codes is an example which may work for PWM (untested).
-	 */
 	uint16_t dataForDevice;
 	DataType dataTypeForDevice;
 	if (dataType == PACKET_GPIO_STATE) {

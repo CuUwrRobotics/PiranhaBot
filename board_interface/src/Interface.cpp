@@ -22,9 +22,6 @@ public:
 
 // How this interface will communicate with real hardware
 Device *commDevice; // The device to actually communicate using
-// uint8_t *pinMapToDevice[MAX_getPinCount()]; // Contains a map to the devices pins. Resized by
-// subclass.
-// uint8_t *pinModes[MAX_getPinCount()]; // The type ID for this. Resized by subclass.
 PinBus pinBus;
 
 // Hardware descirption things
@@ -42,7 +39,11 @@ virtual uint8_t writePin(uint8_t pinNumber, uint16_t *data, DataType dataType,
 
 virtual uint16_t readPin(uint8_t pin, DataType dataType) = 0;
 
+virtual void setDefaultModes() = 0;
+
 virtual uint8_t getPinCount() = 0;
+
+virtual char *getInterfaceName() = 0;
 
 virtual uint8_t getInterfaceTypeId() = 0;
 
@@ -92,19 +93,22 @@ bool start(Device *device, PinBus pb, uint8_t ifaceIndex) {
 		                                             HardwareDescriptor::
 		                                             INVALID_PIN_NUMBER);
 	pinBus = pb;
-	if (commDevice->attachInterface(pinBus, getInterfaceTypeId()))
+	if (commDevice->attachInterface(pinBus, getInterfaceTypeId())) {
+		setDefaultModes(); // Set interface-specific default modes to pinBus
 		initSuccessful = true;
+	}
 	return initSuccessful;
 
 	// return true
 } /* start */
 
 /*
+ * Some interfaces cannot have pin modes changed. They need to override this.
  * @param pinNumber The pin nunmber to try to drive
  * @param hd The full hardware descriptor.
  * @return 1 if there are no errors.
  */
-uint8_t setPinMode(uint8_t pinNumber, PinMode pinMode, uint64_t hd){
+virtual uint8_t setPinMode(uint8_t pinNumber, PinMode pinMode, uint64_t hd){
 	// Check that HD matches
 	if (hd != HardwareDescriptor::addPinNumber(baseHardwareDescriptor,
 	                                           pinNumber)) {
@@ -118,7 +122,7 @@ uint8_t setPinMode(uint8_t pinNumber, PinMode pinMode, uint64_t hd){
 	// Try to drive a pin in commDevice
 	return commDevice->setPinMode(pinBus.getPin(pinNumber), pinMode,
 	                              HardwareDescriptor::getInterfaceId(hd));
-} /* setPinMode */
+}; /* setPinMode */
 
 /**
  * @param pinNumber TODO

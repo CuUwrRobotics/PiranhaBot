@@ -46,8 +46,22 @@ inline uint8_t getPinCount(){
 	return PIN_COUNT;
 } // getPinCount
 
+//
+inline char *getInterfaceName(){
+	return INTERFACE_NAME;
+} // getPinCount
+
 /* These must be changed per interface to ensure operability.
  *****************************************************************************/
+
+/** Called at init. Should assign default modes to the pinBus object.
+ * updateData() will be called after this, so there's no needto call it here.
+ */
+
+void setDefaultModes(){
+	pinBus.setAllPins(MODE_INPUT);
+	commDevice->setPinModes(pinBus, interfaceTypeId);
+} // setDefaultModes
 
 /**
  * Reads data from the comm device and formats into requested data format, if possible.
@@ -57,25 +71,14 @@ inline uint8_t getPinCount(){
  */
 
 uint16_t readPin(uint8_t pin, DataType dataType) {
-	// Requested format is available directly from device
-	if (dataType == PACKET_PWM_FREQ ||
-	    dataType == PACKET_PWM_ON_TICKS)
+	if (dataType == PACKET_GPIO_STATE) {
 		return commDevice->getPinValue(pinBus.getPin(pin),
-		                               dataType);
-	// If program got here, data reformatting is needed from any other possible formats
-	if (dataType == PACKET_INVALID) {
-		ROS_ERROR("writePin: Recieved invalid format.\n");
-		return 0;
-	}
-	if (dataType == PACKET_PWM_DUTY_100) {
-		uint16_t pinValue = commDevice->getPinValue(pinBus.getPin(pin),
-		                                            PACKET_PWM_ON_TICKS);
-		return (uint16_t)((((float) pinValue) / 4095) * 100);
+		                               PACKET_GPIO_STATE);
 	} else {
-		ROS_ERROR("writePin: Recieved invalid format: %d\n", dataType);
+		ROS_ERROR("readPin: Recieved invalid dataType: %d\n", dataType);
 		return 0;
 	}
-}  // readPin
+} // readPin
 
 /**
  * writePin interprets a value to be assigned to a pin, then tells the parent
@@ -87,55 +90,15 @@ uint16_t readPin(uint8_t pin, DataType dataType) {
  */
 uint8_t writePin(uint8_t pinNumber, uint16_t *data, DataType dataType,
                  uint64_t hd){
-	// Check that HD matches
-	if (hd != getHardwareDescriptor(pinNumber)) {
-		ROS_ERROR("writePin: Bad HD, not driving pin.\n");
-		return 0;
-	}
-	if (!(commDevice->ready())) {
-		ROS_ERROR("writePin: Device for interface not ready.\n");
-		return 0;
-	}
-	if (dataType == PACKET_INVALID) {
-		ROS_ERROR("writePin: Recieved invalid format.\n");
-		return 0;
-	}
+	ROS_INFO("writePin: Data cannot be written to the LEAK interface!");
+	return 0;
+} /* writePin */
 
-	/* Code to assign pin goes here. The specific code depends on the device to
-	 * connect to. Data must be formatted and then sent off to the parent device.
-	 * This codes is an example which may work for PWM (untested).
-	 */
-	uint16_t dataForDevice;
-	DataType dataTypeForDevice;
-	if (dataType == PACKET_PWM_FREQ) {
-		dataTypeForDevice = PACKET_PWM_FREQ;
-		// check/set frequency
-		if (data[0] > 3500)     // Max value for frequency
-			dataForDevice = 3500;
-		else if (data[0] < 1)     // Min value for frequency
-			dataForDevice = 1;
-		else dataForDevice = data[0];
-	} else if (dataType == PACKET_PWM_DUTY_100) {
-		dataTypeForDevice = PACKET_PWM_ON_TICKS;
-		if (data[0] > 100)     // Max
-			dataForDevice = 4096;
-		else
-			dataForDevice = (((float)data[0]) / 100) * 4096;
-		// set PWM on/off ticks based on duty cycle
-	} else if (dataType == PACKET_PWM_ON_TICKS) {
-		dataTypeForDevice = PACKET_PWM_ON_TICKS;
-		if (data[0] > 4096)     // Max
-			dataForDevice = 4096;
-		else
-			dataForDevice = data[0];
-		// check/set PWM on/off ticks based on on ticks
-	} else {
-		ROS_ERROR("writePin: Recieved invalid dataType: %d\n", dataType);
-		return 0;
-	}     // Parent device expects data format PACKET_PWM_ON_TICKS
-	return commDevice->setPinValue(pinBus.getPin(pinNumber), &dataForDevice,
-	                               dataTypeForDevice, interfaceTypeId);
-}     /* writePin */
+// **** OVERRIDE OVER PARENT CLASS ****
+uint8_t setPinMode(uint8_t pinNumber, PinMode pinMode, uint64_t hd){
+	ROS_INFO("setPinMode: Data cannot be written to the LEAK interface!");
+	return 0;
+} /* setPinMode */
 }
 
 ;
