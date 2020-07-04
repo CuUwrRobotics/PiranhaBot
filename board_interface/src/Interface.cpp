@@ -164,14 +164,6 @@ inline PinMode getPinMode(uint8_t pin){
  * @return TODO
  */
 
-inline PinState getPinState(uint8_t pin){
-	return commDevice->getPinState(pinBus.getPin(pin));
-} // getPinState
-
-/**
- * @return TODO
- */
-
 inline bool ready(){
 	return initSuccessful;
 } // ready

@@ -48,34 +48,6 @@ virtual uint8_t getValidPinModesCount() = 0;
 
 /**
  * Used to give base class access to local variables.
- * @return Read modes that are possible on the device
- * the pointer returned by getValidPinModes()
- */
-virtual PinMode getValidReadModes(uint8_t i) = 0;
-
-/**
- * Used to give base class access to local variables.
- * @return Number of possible read modes on the device.
- */
-virtual uint8_t getValidReadModesCount() = 0;
-
-/**
- * Used to give base class access to local variables.
- * @return The valid pin states array declared at top of file.
- */
-
-virtual PinState getValidPinStates(uint8_t i) = 0;
-
-/**
- * Used to give base class access to local variables.
- * @return Size of the valid pin states array, which cannot be extrapolated from
- * the pointer returned by getValidPinStates()
- */
-
-virtual uint8_t getValidPinStatesCount() = 0;
-
-/**
- * Used to give base class access to local variables.
  * @return reservedPins array of size getPinCount()
  */
 
@@ -121,7 +93,7 @@ virtual uint8_t getDeviceTypeId() = 0;
 virtual uint16_t getPinValue(uint8_t pin, DataType dataType) = 0;
 
 /**
- * Used to set the value of a pin for devices where on/off states are not enough.
+ * Used to set the value of a pin
  * If pin is readable, this will fail.
  * @return If settign was successful.
  */
@@ -139,16 +111,6 @@ bool pinModeIsValid(PinMode mode) {
 	}
 	return false;
 } // pinModeIsValid
-
-/**
- * @return If given state is valied for this device.
- */
-bool pinStateIsValid(PinState state) {
-	for (int i = 0; i < getValidPinStatesCount(); i++)
-		if (state == getValidPinStates(i))
-			return true;
-	return false;
-} // pinStateIsValid
 
 /**
  * Init the variables and device for this object.
@@ -169,8 +131,7 @@ bool init(uint8_t index, uint8_t addr, BusType busType){
 	// Set each pin to defaults and available for control
 	for (uint8_t i = 0; i < getPinCount(); i++) {
 		getReservedPins(i) = HardwareDescriptor::INTF_INVALID;
-		requestedPinBus.setPinMode(i, MODE_GPIO_INPUT);
-		requestedPinBus.setPinState(i, STATE_OFF);
+		requestedPinBus.setPinMode(i, MODE_INPUT);
 	}
 
 	if (deviceInit()) {
@@ -180,7 +141,6 @@ bool init(uint8_t index, uint8_t addr, BusType busType){
 } /* init */
 
 /**
- * TODO: Pin states
  * Hands control to pins over to an interface. Once control is granted, nothing
  * else can control these pins.
  * @param pinNumbers An array of pin numbers to assigne to the interface.
@@ -190,7 +150,8 @@ bool init(uint8_t index, uint8_t addr, BusType busType){
 bool attachInterface(PinBus pinBus, uint8_t interfaceId) {
 	// Check pins and ensure they are not yet set to an interface.
 	if (!verifyPins(pinBus, HardwareDescriptor::INTF_INVALID)) {
-		printf("GPIO DEVICE -> ERROR: Bad pin configs; not changing modes\n");
+		printf("%s DEVICE -> ERROR: Bad pin configs; not changing modes\n",
+		       getHardwareName());
 		return false;
 	}
 	// Pins are all within range and available, so assign control
@@ -205,49 +166,6 @@ bool attachInterface(PinBus pinBus, uint8_t interfaceId) {
 	}
 	return true;
 } // attachInterface
-
-/**
- * Drives a pin as requested from an interface. This will not actually change
- * the pin state yet, but will add it to the 'que'.
- * WARNING: SHOULD ONLY BE CALLED BY INTERFACES!
- *
- * @param pinNumber Number of the pin to drive
- * @param hd Full hardware descriptor
- * @return TODO
- */
-
-int setPinState(uint8_t pinNumber, PinState pinState, uint8_t interfaceId) {
-	// Check that pin number is acceptable
-	if (pinNumber < 0 || pinNumber >= getPinCount()) {
-		printf(
-			"GPIO DEVICE -> ERROR: Pin state change request on out of range pin\n");
-		return 0;
-	}
-	// Check pin state
-	if (pinStateIsValid(pinState)) {
-		printf(
-			"GPIO DEVICE -> ERROR: Pin state change request with invalid state\n");
-		return 0;
-	}
-	// Check that pin number & interfaceId match up
-	if (getReservedPins(pinNumber) != interfaceId) {
-		printf(
-			"GPIO DEVICE -> ERROR: Pin state change request by non-controlling interface\n");
-		return 0;
-	}
-	// Check requested pin modes, not current, insce pin modes are always updated before read/write
-	// performed
-	if (requestedPinBus.getPinMode(pinNumber) != MODE_GPIO_OUTPUT) {
-		printf("GPIO DEVICE -> ERROR: Pin state change request on non-write pin\n");
-		return 0;
-	}
-	// Write the assignment to the que and update other data
-	if (requestedPinBus.getPinState(pinNumber) != pinState) {
-		requestedPinBus.setPinState(pinNumber, pinState);
-		writeDataPending = true; // Mark for data to be written
-	}
-	return 1;
-} // addInterface
 
 /**
  * @return This device's index.
@@ -273,7 +191,8 @@ virtual bool updateData() = 0;
 
 bool setPinModes(PinBus pinBus, uint8_t interfaceId) {
 	if (!verifyPins(pinBus, interfaceId)) {
-		printf("GPIO DEVICE -> ERROR: Bad pin configs; not chainging pin modes\n");
+		printf("%s DEVICE -> ERROR: Bad pin configs; not chainging pin modes\n",
+		       getHardwareName());
 		return false;
 	}
 	// Pins are all within range and available, so assign control
@@ -297,11 +216,11 @@ bool setPinModes(PinBus pinBus, uint8_t interfaceId) {
 
 bool setPinMode(uint8_t pinNumber, PinMode pinMode, uint8_t interfaceId) {
 	if (getReservedPins(pinNumber) != interfaceId) {
-		printf("GPIO DEVICE -> ERROR: pin in use\n");
+		printf("%s DEVICE -> ERROR: pin in use\n", getHardwareName());
 		return false;
 	}
-	if (pinModeIsValid(pinMode)) {
-		printf("GPIO DEVICE -> ERROR: bad pin mode\n");
+	if (!pinModeIsValid(pinMode)) {
+		printf("%s DEVICE -> ERROR: bad pin mode\n", getHardwareName());
 		return false;
 	}
 	// Pins are all within range and available, so assign control
@@ -311,8 +230,6 @@ bool setPinMode(uint8_t pinNumber, PinMode pinMode, uint8_t interfaceId) {
 	if (currentPinBus.getPinMode(pinNumber) != pinMode) {
 		requestedPinBus.setPinMode(pinNumber, pinMode);
 		pinModeChangePending = true;
-		// printf("GPIO DEVICE #%d -> Changing pin mode for pin %d: 0x%X\n",
-		//        deviceIndex, pinNumber, pinMode);
 	}
 	// }
 	return true;
@@ -324,7 +241,7 @@ bool setPinMode(uint8_t pinNumber, PinMode pinMode, uint8_t interfaceId) {
 
 bool verifyPins(PinBus pinBus, uint8_t interfaceId) {
 	if (pinBus.getPinCount() < 0 || pinBus.getPinCount() > getPinCount()) {
-		printf("GPIO DEVICE -> ERROR: pin counts too high or low\n");
+		printf("%s DEVICE: ERROR: pin counts too high or low\n", getHardwareName());
 		return false;
 	}
 	// For each pin:
@@ -333,16 +250,17 @@ bool verifyPins(PinBus pinBus, uint8_t interfaceId) {
 	// -> verify pin modes
 	for (uint8_t i = 0; i < pinBus.getPinCount(); i++) { // for each pin
 		if (pinBus.getPin(i) < 0 || pinBus.getPin(i) >= getPinCount()) { // If not exist
-			printf("GPIO DEVICE -> ERROR: bad pin number at i = %d: %d\n", i,
-			       pinBus.getPin(i));
+			printf("%s DEVICE -> ERROR: bad pin number at i = %d: %d\n",
+			       getHardwareName(), i, pinBus.getPin(i));
 			return false;
 		}
 		if (getReservedPins(pinBus.getPin(i)) != interfaceId) {
-			printf("GPIO DEVICE -> ERROR: pins in use\n");
+			printf("%s DEVICE -> ERROR: pins in use\n", getHardwareName());
 			return false;
 		}
 		if (!pinModeIsValid(pinBus.getPinMode(i))) {
-			printf("GPIO DEVICE -> ERROR: bad pin mode at i=%d\n", i);
+			printf("%s DEVICE -> ERROR: bad pin mode at i=%d\n",
+			       getHardwareName(), i);
 			return false;
 		}
 	}
@@ -354,12 +272,9 @@ bool verifyPins(PinBus pinBus, uint8_t interfaceId) {
  */
 
 bool readableDataAvailable() {
-	if (getValidReadModes(0) == MODE_INVALID)
-		return false; // Can't read data from this device
 	for (uint8_t pin = 0; pin < getPinCount(); pin++) // For each pin
-		for (uint8_t mode = 0; mode < getValidReadModesCount(); mode++) // Check all read modes
-			if (currentPinBus.getPinMode(pin) == getValidReadModes(mode)) // If the pin uses this mode
-				return true; // Then there is some readable data
+		if (currentPinBus.getPinMode(pin) == MODE_INPUT) // If the pin uses this mode
+			return true; // Then there is some readable data
 	return false; // There was no readable data
 } // readableDataAvailable
 
@@ -367,12 +282,9 @@ bool readableDataAvailable() {
  * @return TODO
  */
 
-bool pinIsReadable(uint8_t pin) {
-	if (getValidReadModes(0) == MODE_INVALID)
-		return false; // Can't read data from this device
-	for (uint8_t mode = 0; mode < getValidReadModesCount(); mode++) // Check all read modes
-		if (currentPinBus.getPinMode(pin) == getValidReadModes(mode)) // If the pin uses read mode
-			return true; // Then there is some readable data
+inline bool pinIsReadable(uint8_t pin) {
+	if (currentPinBus.getPinMode(pin) == MODE_INPUT) // If the pin is set to input
+		return true; // Then there is some readable data
 	return false; // There was no readable data
 } // readableDataAvailable
 
@@ -382,14 +294,6 @@ bool pinIsReadable(uint8_t pin) {
 
 inline PinMode getPinMode(uint8_t pin){
 	return currentPinBus.getPinMode(pin);
-} // getPinModes
-
-/**
- * @return TODO
- */
-
-inline PinState getPinState(uint8_t pin){
-	return currentPinBus.getPinState(pin);
 } // getPinModes
 
 /**

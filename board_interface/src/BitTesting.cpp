@@ -90,6 +90,7 @@ bool testGpio(Interface *intf, Device *dev) {
 	bool returnVal = true;
 	uint64_t hd;
 	uint16_t data;
+	uint16_t correctData;
 	bool dataGood;
 
 	printf("%s", YELLOW);
@@ -105,37 +106,141 @@ bool testGpio(Interface *intf, Device *dev) {
 		returnVal = false;
 	}
 
+	// Tests pin modes
+	// ***************************************************************************
+	printf(
+		"Pin Modes Test (setPinValue errors are normal and part of the test)\n");
 	printf("Results:\n========\n");
+	dataGood = true;
+	uint16_t previousData;
+	// Pin 0 mode OUT
+	hd = intf->getHardwareDescriptor(0);
+	intf->setPinMode(0, MODE_OUTPUT, hd);
+	dev->updateData();
+	if (intf->getPinMode(0) != MODE_OUTPUT) {
+		printf("%sPin 0 could not be set as output.%s\n",
+		       RED, NO_COLOR);
+		returnVal = false; // Return failure for test
+	}
+	// Set pin 0 high/low, make sure it works
+	data = 1; // Set one pin per cycle to HIGH
+	intf->writePin(0, &data, PACKET_GPIO_STATE, hd);
+	dev->updateData();
+	if (intf->readPin(0, PACKET_GPIO_STATE) != 1) // Check pin data
+		dataGood = false;
+	data = 0; // Set one pin per cycle to HIGH
+	intf->writePin(0, &data, PACKET_GPIO_STATE, hd);
+	dev->updateData();
+	if (intf->readPin(0, PACKET_GPIO_STATE) != 0) // Check pin data
+		dataGood = false;
+	if (dataGood == false) {
+		printf(
+			"%sTried to set pin 0 was set as output, but output on pin 0 could not be written to.%s\n",
+			RED, NO_COLOR);
+		dataGood = true; // Reset for next step
+		returnVal = false; // Return failure for test
+	}
+
+	// Pin 1 (mode IN, should fail)
+	hd = intf->getHardwareDescriptor(1);
+	intf->setPinMode(1, MODE_INPUT, hd);
+	dev->updateData();
+	if (intf->getPinMode(1) != MODE_INPUT) {
+		printf("%sCould not set pin 1 as input.%s\n",
+		       RED, NO_COLOR);
+		returnVal = false; // Return failure for test
+	}
+	// Set pin 1 high/low, make sure it does not change
+	// Pin 1 on
+	previousData = intf->readPin(0, PACKET_GPIO_STATE);
+	data = 1; // Set one pin per cycle to HIGH
+	intf->writePin(1, &data, PACKET_GPIO_STATE, hd);
+	dev->updateData();
+	if (intf->readPin(1, PACKET_GPIO_STATE) != previousData) // If data changed
+		dataGood = false;
+	// Pin 1 off
+	previousData = intf->readPin(0, PACKET_GPIO_STATE);
+	data = 0; // Set one pin per cycle to HIGH
+	intf->writePin(1, &data, PACKET_GPIO_STATE, hd);
+	dev->updateData();
+	if (intf->readPin(1, PACKET_GPIO_STATE) != previousData) // If data changed
+		dataGood = false;
+	if (dataGood == false) {
+		printf(
+			"%sTried to set pin 1 as input, but the pin could still be written to.%s\n",
+			RED, NO_COLOR);
+		dataGood = true; // Reset for next step
+		returnVal = false; // Return failure for test
+	}
+
+	// Set pin 0 high/low again, make sure it still works with pin 1 as input
+	hd = intf->getHardwareDescriptor(0);
+	data = 1; // Set one pin per cycle to HIGH
+	intf->writePin(0, &data, PACKET_GPIO_STATE, hd);
+	dev->updateData();
+	if (intf->readPin(0, PACKET_GPIO_STATE) != 1) // Check pin data
+		dataGood = false;
+	data = 0; // Set one pin per cycle to HIGH
+	intf->writePin(0, &data, PACKET_GPIO_STATE, hd);
+	dev->updateData();
+	if (intf->readPin(0, PACKET_GPIO_STATE) != 0) // Check pin data
+		dataGood = false;
+	if (dataGood == false) {
+		printf(
+			"%sAfter trying to set pin 1 was set as input, pin 0 could not output data.%s\n",
+			RED, NO_COLOR);
+		dataGood = true; // Reset for next step
+		returnVal = false; // Return failure for test
+	}
+	if (returnVal == true) { // Above test was successful
+		printf("%sPin modes assigned correctly.%s\n", GREEN, NO_COLOR);
+	} else {
+		printf("%sFAILED: Pin mode assignment is non functional.%s\n", RED,
+		       NO_COLOR);
+	}
+	// Set all pins as outputs for test.
+	for (int pin = 0; pin < intf->getPinCount(); pin++) {
+		hd = intf->getHardwareDescriptor(pin);
+		intf->setPinMode(pin, MODE_OUTPUT, hd);
+	}
+	dev->updateData();
+
 	// Sets one pin per cycle to low (first) then high over 32 total cycles
+	// ***************************************************************************
 	for (int highLow = 0; highLow < 2; highLow++) {
-		printf("Incrementing %s test:\n", (highLow ? "ON" : "OFF"));
+		printf("Incrementing %s Test\n", (highLow ? "ON" : "OFF"));
+		printf("Results:\n========\n");
 		for (int cycle = 0; cycle < intf->getPinCount(); cycle++) { // Run 16 times
 			for (int pin = 0; pin < intf->getPinCount(); pin++) { // Assign pins
 				hd = intf->getHardwareDescriptor(pin);
 				data = ((pin == cycle) == highLow); // Set one pin per cycle to HIGH
 				intf->writePin(pin, &data, PACKET_GPIO_STATE, hd);
 			}
-		}
-		dev->updateData(); // Push data out to the chip
-		for (int cycle = 0; cycle < intf->getPinCount(); cycle++) { // Run 16 times
+
+			dev->updateData(); // Push data out to the chip
 			printf("\tCycle %d Pins:\t|", cycle);
 			for (int pin = 0; pin < intf->getPinCount(); pin++) { // Check pins
-				data = intf->readPin(pin, PACKET_GPIO_STATE); // get pin data
-				if (data == (((pin == cycle) == highLow) ? 1 : 0)) // Check pin data
+				data = intf->readPin(pin, PACKET_GPIO_STATE); // Get actual pin data
+				correctData = ((pin == cycle) == highLow); // Get the intended data
+				if (data == correctData) // Check pin data
 					dataGood = true;
 				else {
 					dataGood = false;
 					returnVal = false;
 				}
 				printf("%s%s", (dataGood ? GREEN : RED),
-				       (((pin == cycle) == highLow) ? "." : "'"));
+				       (data ? "." : "'"));
 			}
 			printf("%s|\n", NO_COLOR);
+			// data = dev->getPinValue(0, PACKET_PWM_DUTY_100);
+			// // printf("pin data: ");
 		}
 	}
 
 	// Sets pins to 0101 pattern, then 1010
-	printf("Patterned test:\n");
+	// ***************************************************************************
+	printf("Patterned Test\n");
+	printf("Results:\n========\n");
 	for (int highLow = 0; highLow < 2; highLow++) {
 		for (int pin = 0; pin < intf->getPinCount(); pin++) { // Assign pins
 			hd = intf->getHardwareDescriptor(pin);
@@ -145,44 +250,19 @@ bool testGpio(Interface *intf, Device *dev) {
 		dev->updateData(); // Push data out to the chip
 		printf("\tPins:\t\t|");
 		for (int pin = 0; pin < intf->getPinCount(); pin++) { // Check pins
-			data = intf->readPin(pin, PACKET_GPIO_STATE); // get pin data
-			if (data == (((pin % 2) == highLow) ? 1 : 0)) // Check pin data
+			data = intf->readPin(pin, PACKET_GPIO_STATE); // Get actual pin data
+			correctData = ((pin % 2) == highLow); // Get the intended data
+			if (data == correctData) // Check pin data
 				dataGood = true;
 			else {
 				dataGood = false;
 				returnVal = false;
 			}
 			printf("%s%s", (dataGood ? GREEN : RED),
-			       (((pin % 2) == highLow) ? "." : "'"));
+			       (data ? "." : "'"));
 		}
 		printf("%s|\n", NO_COLOR);
 	}
-
-	// dev->updateData(); // Push data out to the chip
-	// printf("Results:\n========\n");
-	// // All pins should have same freq
-	// frequency = intf->readPin(0, PACKET_PWM_FREQ);
-	// printf("Frequency: ");
-	// if (frequency != 3500) {
-	// 	returnVal = false;
-	// 	printf("%s", RED);
-	// } else {
-	// 	printf("%s", GREEN);
-	// }
-	// printf("%d%s\n", frequency, NO_COLOR);
-	// bool dataGood = false;
-	// for (int pin = 0; pin < intf->getPinCount(); pin++) {
-	// 	data = intf->readPin(pin, PACKET_PWM_ON_TICKS);
-	// 	if (direction) {
-	// 		// data = 4095 - data;
-	// 		dataGood = (data == 4095 - (256 * pin));
-	// 	} else {
-	// 		dataGood = (data == 256 * pin);
-	// 	}
-	// 	printf(" - Pin %s%d%s:\t%s%d%s\n", WHITE, pin, NO_COLOR,
-	// 	       (dataGood) ? GREEN : RED, data, NO_COLOR);
-	// 	if (!dataGood) returnVal = false;
-	// }
 
 	printf("%s", YELLOW);
 	for (int i = 0; i < 80; i++)
@@ -190,7 +270,6 @@ bool testGpio(Interface *intf, Device *dev) {
 	printf("%s\n", NO_COLOR);
 
 	return returnVal;
-	// }
 } // testPwm
 
 /**
@@ -249,60 +328,61 @@ void dumpConfiguration(bool shrinkRepeatedPins, Interface **interfaces,
 				printf("Pin count: %s%d%s\n", WHITE,
 				       interfaces[intf]->getPinCount(), NO_COLOR);
 				morePinsLeft = true;
-				for (int pin = 0; pin < interfaces[intf]->getPinCount(); pin++) {
-					if (shrinkRepeatedPins && pin != 0) { // Finds if pins are identical
-						uint8_t firstPin = pin;
-						// While the current pin matches previous, increment pin # up
-						while (pin < interfaces[intf]->getPinCount() &&
-						       interfaces[intf]->getPinBus().getPinMode(pin) ==
-						       interfaces[intf]->getPinBus().getPinMode(pin - 1) &&
-						       interfaces[intf]->getPinBus().getPinState(pin) ==
-						       interfaces[intf]->getPinBus().getPinState(pin - 1)) {
-							pin++;
-						}
-						// If incrementing actually happened
-						if (pin == interfaces[intf]->getPinCount()) // Last pin?
-							morePinsLeft = false;
-						printf("%s%s%s%s%s%s─", moreDevfLeft ? "│" : " ", SP,
-						       moreIntfLeft ? "│" : " ",  SP, SP, morePinsLeft ? "├" : "└"); // Formatting
-						if (firstPin != pin && firstPin != pin - 1) {
-							pin--;
-							printf("%s[also %d ... %d]%s", D_GRAY,
-							       interfaces[intf]->getDevPin(firstPin),
-							       interfaces[intf]->getDevPin(pin),
-							       NO_COLOR);
-							printf("\n"); // Formatting
-						} else { // Incrementing did NOT happen, so act normal.
-							if (firstPin == pin - 1) // Incrementing did happen, but only once.
-								pin--;
-							printf("Pin %s%d%s:\t", WHITE, interfaces[intf]->getDevPin(pin),
-							       NO_COLOR);
-							printf("%s, ", interfaces[intf]->getPinBus().
-							       getModeString(pin, true));
-							printf("%s ", interfaces[intf]->getPinBus().
-							       getStateString(pin, true));
-							// printf("Pin %s%d%s:\t", WHITE, interfaces[intf]->getDevPin(pin),
-							//        NO_COLOR);
-							// printf("Count: %d ", interfaces[intf]->getPinBus().getPinCount());
-							printf("\n"); // Formatting
-						}
-					} else {
-						if (pin == interfaces[intf]->getPinCount() - 1) // Last pin?
-							morePinsLeft = false;
-						printf("%s%s%s%s%s%s─", moreDevfLeft ? "│" : " ", SP,
-						       moreIntfLeft ? "│" : " ",  SP, SP, morePinsLeft ? "├" : "└"); // Formatting
-						printf("Pin %s%d%s:\t", WHITE, interfaces[intf]->getDevPin(pin),
-						       NO_COLOR);
-						printf("%s, ", interfaces[intf]->getPinBus().
-						       getModeString(pin, true));
-						printf("%s ", interfaces[intf]->getPinBus().
-						       getStateString(pin, true));
-						// printf("Pin %s%d%s:\t", WHITE, interfaces[intf]->getDevPin(pin),
-						//        NO_COLOR);
-						// printf("Count: %d ", interfaces[intf]->getPinBus().getPinCount());
-						printf("\n"); // Formatting
-					}
-				}
+				// Temporarily removed to ease transition away from pinBus modes and states
+				// for (int pin = 0; pin < interfaces[intf]->getPinCount(); pin++) {
+				// 	if (shrinkRepeatedPins && pin != 0) { // Finds if pins are identical
+				// 		uint8_t firstPin = pin;
+				// 		// While the current pin matches previous, increment pin # up
+				// 		while (pin < interfaces[intf]->getPinCount() &&
+				// 		       interfaces[intf]->getPinBus().getPinMode(pin) ==
+				// 		       interfaces[intf]->getPinBus().getPinMode(pin - 1) &&
+				// 		       interfaces[intf]->getPinBus().getPinState(pin) ==
+				// 		       interfaces[intf]->getPinBus().getPinState(pin - 1)) {
+				// 			pin++;
+				// 		}
+				// 		// If incrementing actually happened
+				// 		if (pin == interfaces[intf]->getPinCount()) // Last pin?
+				// 			morePinsLeft = false;
+				// 		printf("%s%s%s%s%s%s─", moreDevfLeft ? "│" : " ", SP,
+				// 		       moreIntfLeft ? "│" : " ",  SP, SP, morePinsLeft ? "├" : "└"); // Formatting
+				// 		if (firstPin != pin && firstPin != pin - 1) {
+				// 			pin--;
+				// 			printf("%s[also %d ... %d]%s", D_GRAY,
+				// 			       interfaces[intf]->getDevPin(firstPin),
+				// 			       interfaces[intf]->getDevPin(pin),
+				// 			       NO_COLOR);
+				// 			printf("\n"); // Formatting
+				// 		} else { // Incrementing did NOT happen, so act normal.
+				// 			if (firstPin == pin - 1) // Incrementing did happen, but only once.
+				// 				pin--;
+				// 			printf("Pin %s%d%s:\t", WHITE, interfaces[intf]->getDevPin(pin),
+				// 			       NO_COLOR);
+				// 			printf("%s, ", interfaces[intf]->getPinBus().
+				// 			       getModeString(pin, true));
+				// 			printf("%s ", interfaces[intf]->getPinBus().
+				// 			       getStateString(pin, true));
+				// 			// printf("Pin %s%d%s:\t", WHITE, interfaces[intf]->getDevPin(pin),
+				// 			//        NO_COLOR);
+				// 			// printf("Count: %d ", interfaces[intf]->getPinBus().getPinCount());
+				// 			printf("\n"); // Formatting
+				// 		}
+				// 	} else {
+				// 		if (pin == interfaces[intf]->getPinCount() - 1) // Last pin?
+				// 			morePinsLeft = false;
+				// 		printf("%s%s%s%s%s%s─", moreDevfLeft ? "│" : " ", SP,
+				// 		       moreIntfLeft ? "│" : " ",  SP, SP, morePinsLeft ? "├" : "└"); // Formatting
+				// 		printf("Pin %s%d%s:\t", WHITE, interfaces[intf]->getDevPin(pin),
+				// 		       NO_COLOR);
+				// 		printf("%s, ", interfaces[intf]->getPinBus().
+				// 		       getModeString(pin, true));
+				// 		printf("%s ", interfaces[intf]->getPinBus().
+				// 		       getStateString(pin, true));
+				// 		// printf("Pin %s%d%s:\t", WHITE, interfaces[intf]->getDevPin(pin),
+				// 		//        NO_COLOR);
+				// 		// printf("Count: %d ", interfaces[intf]->getPinBus().getPinCount());
+				// 		printf("\n"); // Formatting
+				// 	}
+				// }
 			}
 		}
 	}

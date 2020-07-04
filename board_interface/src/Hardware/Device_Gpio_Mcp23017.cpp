@@ -32,27 +32,18 @@ const static uint8_t PIN_COUNT = 16;
 const static uint8_t deviceTypeId = HardwareDescriptor::DEVICE_GPIO;
 const static uint8_t readableData = true; // If this chip can read data
 
-// Pin States and Modes That This Chip can Accept
+// Pin Modes That This Chip can Accept
 // ==============================================
-const static uint8_t VALID_PIN_MODE_COUNT = 3;
-const PinMode validPinModes[VALID_PIN_MODE_COUNT] = {MODE_GPIO_INPUT,
-	                                                   MODE_GPIO_INPUT_X,
-	                                                   MODE_GPIO_OUTPUT};
-// Pin modes that this pin can read on. If none, use MODE_INVALID.
-const static uint8_t VALID_READ_MODE_COUNT = 2;
-const PinMode validReadModes[VALID_READ_MODE_COUNT] = {MODE_GPIO_INPUT,
-	                                                     MODE_GPIO_INPUT_X};
-const static uint8_t VALID_PIN_STATE_COUNT = 3;
-const PinState validPinStates[VALID_PIN_STATE_COUNT] = {STATE_ON,
-	                                                      STATE_OFF,
-	                                                      STATE_NONE};
+const static uint8_t VALID_PIN_MODE_COUNT = 2;
+const PinMode validPinModes[VALID_PIN_MODE_COUNT] = {MODE_INPUT,
+	                                                   MODE_OUTPUT};
 
 // Other Variables (Don't change these)
 // ====================================
 uint8_t reservedPins[PIN_COUNT];
-// No pin values for GPIO, only states
-// uint16_t currentPinValues[PIN_COUNT];
-// uint16_t requestedPinValues[PIN_COUNT];
+// No pin values for GPIO, only HIGH/LOW, so each bit is one pin.
+uint16_t currentPinValues;
+uint16_t requestedPinValues;
 
 /* These give the base Device class access to the above local variables. They
  * don't need any modification. See more info about each function in the Device
@@ -83,26 +74,6 @@ inline PinMode getValidPinModes(uint8_t i){
 inline uint8_t getValidPinModesCount(){
 	return VALID_PIN_MODE_COUNT;
 } // getValidPinModesCount
-
-//
-inline PinMode getValidReadModes(uint8_t i){
-	return validReadModes[i];
-} // getValidReadModes
-
-//
-inline uint8_t getValidReadModesCount(){
-	return VALID_READ_MODE_COUNT;
-} // getValidReadModesCount
-
-//
-inline PinState getValidPinStates(uint8_t i){
-	return validPinStates[i];
-} // getValidPinStates
-
-//
-inline uint8_t getValidPinStatesCount(){
-	return VALID_PIN_STATE_COUNT;
-} // getValidPinStatesCount
 
 //
 inline uint8_t &getReservedPins(uint8_t i){
@@ -142,8 +113,19 @@ bool deviceInit(){
 
 public:
 
-// No pin values for GPIO, only states
+/**
+ * @param pin TODO
+ * @param dataType TODO
+ * @return TODO
+ */
+
 inline uint16_t getPinValue(uint8_t pin, DataType dataType){
+	if (dataType == PACKET_GPIO_STATE) {
+		// printf("reading: 0x%4x", currentPinValues);
+		return (currentPinValues >> pin) & 0x0001; // Only need 1 bit.
+	}
+	ROS_ERROR("getPinValue for device index %d got bad dataType %d for pin %d.",
+	          dataType, pin);
 	return 0;
 } // getPinValue
 
@@ -156,20 +138,36 @@ inline uint16_t getPinValue(uint8_t pin, DataType dataType){
 
 bool setPinValue(uint8_t pin, uint16_t *data, DataType dataType, uint8_t
                  interfaceId) {
-	return false; // No values for this interface, only pin state whould be changed
-	// if (getReservedPins(pinBus.getPin(i)) != interfaceId) {
-	// 	ROS_ERROR(
-	// 		"setPinValue for device index %d got bad interface ID 0x%.2x for pin %d.",
-	// 		deviceIndex, interfaceId, pin);
-	// 	return false;
-	// }
-	// if (pin >= 0 && pin < PIN_COUNT) {
-	// 	requestedPinValues[pin] = value;
-	// 	writeDataPending = true;
-	// 	return true;
-	// }
-	// ROS_ERROR("setPinValue for device index %d got bad pin %d.",
-	//           deviceIndex, pin);
+	if (getReservedPins(pin) != interfaceId) {
+		ROS_ERROR(
+			"setPinValue for device index %d got bad interface ID 0x%.2x for pin %d.",
+			deviceIndex, interfaceId, pin);
+		return false;
+	}
+	// If pin is not going to be in output mode, don't set it.
+	if (pinIsReadable(pin)) {
+		// Error is silenceable for BIT testing.
+		ROS_ERROR(
+			"setPinValue for device index %d was told to write to a pin in a reading mode.",
+			deviceIndex);
+		return false;
+	}
+	if (pin >= 0 && pin < PIN_COUNT) {
+		if (dataType == PACKET_GPIO_STATE) {
+			if (data[0]) // set bit
+				requestedPinValues |= (0x0001 << pin);
+			else // clear bit
+				requestedPinValues &= ~(0x0001 << pin);
+			writeDataPending = true;
+			return true;
+		}
+		ROS_ERROR("setPinValue for device index %d got bad dataType %d.",
+		          deviceIndex, dataType);
+		return false;
+	}
+	ROS_ERROR("setPinValue for device index %d got bad pin %d.",
+	          deviceIndex, pin);
+	return false;
 } // setPinValue
 
 /**
@@ -206,11 +204,11 @@ bool updateData(){
 	// Check if any data needs to be written. If so, write it.
 	if (writeDataPending) {
 		printf("Writing data to pins (TODO).\n");
+		currentPinValues = requestedPinValues; // Just pushes data over for now
 		// NOTE: this process depends highly on the device being written to.
 		// First, set any pin states
-		for (uint8_t pin = 0; pin < PIN_COUNT; pin++) {
-			currentPinBus.setPinState(pin, requestedPinBus.getPinState(pin));
-		}
+		// for (uint8_t pin = 0; pin < PIN_COUNT; pin++) {
+		// }
 		// No values for this interface
 		// uint16_t pinValuesToSend[PIN_COUNT] = {0};
 		// // For each pin, check if pin is in read mode. if not, write the value over.

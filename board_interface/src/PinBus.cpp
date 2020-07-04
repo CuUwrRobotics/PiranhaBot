@@ -6,17 +6,6 @@
 
 /**
  * @param mode TODO
- * @param state TODO
- * @return TODO
- */
-
-inline bool PinBus::setPin(uint8_t pin, PinMode mode, PinState
-                           state){
-	return (setPinMode(pin, mode) && setPinState(pin, state));
-} // setPin
-
-/**
- * @param mode TODO
  * @return TODO
  */
 
@@ -35,25 +24,6 @@ bool PinBus::setPinMode(uint8_t index, PinMode mode){
 } // setPinMode
 
 /**
- * @param state TODO
- * @return TODO
- */
-
-bool PinBus::setPinState(uint8_t index, PinState state){
-	if (state == STATE_INVALID) {
-		ROS_ERROR("PinBus::setPinState: invalid state selected\n");
-		return false;
-	}
-	if (!(index < 0 || index >= MAX_PINS)) {
-		pinStates[index] = state;
-		return true;
-	}
-	ROS_ERROR("PinBus::setPinState: Bad index number: %d, can't assign state.\n",
-	          index);
-	return false;
-} // setPinState
-
-/**
  * @param pin TODO
  * @return TODO
  */
@@ -63,68 +33,33 @@ inline PinMode PinBus::getPinMode(uint8_t pin) {
 } // PinBus::getPinMode
 
 /**
- * @param pin TODO
- * @return TODO
- */
-
-inline PinState PinBus::getPinState(uint8_t pin){
-	return pinStates[pin];
-} // PinBus::getPinState
-
-/**
  * @param modes TODO
- * @param states TODO
  * @return TODO
  */
 
-inline bool PinBus::setPins(const PinMode *modes, const
-                            PinState *states) {
-	return (setPinModes(modes) && setPinStates(states));
+inline bool PinBus::setPins(const PinMode *modes) {
+	return (setPinModes(modes));
 } // setPins
 
 /**
  * @param modes TODO
- * @param states TODO
  * @return TODO
  */
 
-bool PinBus::setAllPins(PinMode mode, PinState state) {
+bool PinBus::setAllPins(PinMode mode) {
 	if (pinCount == MAX_PINS + 1) {
 		ROS_ERROR(
-			"PinBus::setAllPins: Pin count not yet set, can't assign states/modes.\n");
+			"PinBus::setAllPins: Pin count not yet set, can't assign modes.\n");
 		return false;
 	}
 	for (uint8_t i = 0; i < pinCount; i++) {
-		pinStates[i] = state;
 		pinModes[i] = mode;
 	}
 	return true;
 } // setPins
 
 /**
- * @param states TODO
- * @return TODO
- */
-
-bool PinBus::setPinStates(const PinState *states){
-	if (pinCount == MAX_PINS + 1) {
-		ROS_ERROR(
-			"PinBus::setPinStates: Pin count not yet set, can't assign states.\n");
-		return false;
-	}
-	for (uint8_t i = 0; i < pinCount; i++) {
-		if (states[i] == STATE_INVALID) {
-			ROS_ERROR("PinBus::setPinStates: Invalid state selected for pin #%d\n",
-			          i);
-			continue;
-		}
-		pinStates[i] = states[i];
-	}
-	return true;
-} // setPinStates
-
-/**
- * @param states TODO
+ * @param modes TODO
  * @return TODO
  */
 
@@ -276,20 +211,18 @@ bool PinBus::createPinBus(BusType busType, uint8_t pinCount){
  * @param pinCount TODO
  * @param pinTypes TODO
  * @param pinModes TODO
- * @param pinStates TODO
  */
 
 bool PinBus::createPinBus(BusType busType, uint8_t *pinAssignments,
                           uint8_t pinCount,
-                          const PinMode *pinModes, const
-                          PinState *pinStates){
+                          const PinMode *pinModes){
 	if (!createPinBus(busType, pinCount))
 		return false;
 	// this->busType = busType;
 	// this->pinCount = pinCount;
 	if (!(assignPins(pinAssignments, pinCount)))
 		return false;
-	if (!setPins(pinModes, pinStates))
+	if (!setPins(pinModes))
 		return false;
 	return true;
 } // createPinBus
@@ -300,19 +233,17 @@ bool PinBus::createPinBus(BusType busType, uint8_t *pinAssignments,
  * @param end TODO
  * @param pinCount TODO
  * @param pinModes TODO
- * @param pinStates TODO
  * @return TODO
  */
 
 bool PinBus::createPinBusFromSet(BusType busType, uint8_t start,
                                  uint8_t end,
-                                 const PinMode *pinModes,
-                                 const PinState *pinStates){
+                                 const PinMode *pinModes){
 	if (!createPinBus(busType, ((end - start) + 1)))
 		return false;
 	if (!(assignPinSet(start, end)))
 		return false;
-	if (!setPins(pinModes, pinStates))
+	if (!setPins(pinModes))
 		return false;
 	return true;
 } // createPinBus
@@ -322,19 +253,17 @@ bool PinBus::createPinBusFromSet(BusType busType, uint8_t start,
  * @param start TODO
  * @param end TODO
  * @param pinMode TODO
- * @param pinState TODO
  * @return TODO
  */
 
 bool PinBus::createUniformPinBusFromSet(BusType busType, uint8_t start,
                                         uint8_t end,
-                                        PinMode pinMode,
-                                        PinState pinState){
+                                        PinMode pinMode){
 	if (!createPinBus(busType, ((end - start) + 1)))
 		return false;
 	if (!(assignPinSet(start, end)))
 		return false;
-	if (!setAllPins(pinMode, pinState))
+	if (!setAllPins(pinMode))
 		return false;
 	return true;
 } // createPinBus
@@ -345,7 +274,6 @@ bool PinBus::createUniformPinBusFromSet(BusType busType, uint8_t start,
 
 void PinBus::resetAll(){
 	for (uint8_t i = 0; i < MAX_PINS; i++) {
-		pinStates[i] = STATE_INVALID;
 		pinModes[i] = MODE_INVALID;
 		pinAssignments[i] = 0xFF;
 	}
@@ -376,57 +304,15 @@ char *PinBus::getModeString(uint8_t pin, bool colorizeBadOutputs) {
 			return "\033[1;31mMODE_INVALID\033[0m";
 		else return "MODE_INVALID";
 		break;
-	case MODE_GPIO_INPUT:
-		return "MODE_GPIO_INPUT";
+	case MODE_INPUT:
+		return "MODE_INPUT";
 		break;
-	case MODE_GPIO_INPUT_X:
-		return "MODE_GPIO_INPUT_X";
-		break;
-	case MODE_GPIO_OUTPUT:
-		return "MODE_GPIO_OUTPUT";
-		break;
-	case MODE_PWM_ON:
-		return "MODE_PWM_ON";
-		break;
-	case MODE_PWM_OFF:
-		return "MODE_PWM_OFF";
-		break;
+	case MODE_OUTPUT:
+		return "MODE_OUTPUT";
 	default:
 		if (colorizeBadOutputs)
 			return "\033[1;31munknown_mode\033[0m";
 		else return "unknown_mode";
-		break;
-	} // switch
-} // busTypeIs
-
-/**
- * @param pin TODO
- * @return TODO
- */
-
-char *PinBus::getStateString(uint8_t pin, bool colorizeBadOutputs) {
-	switch (pinStates[pin]) {
-	case STATE_INVALID:
-		if (colorizeBadOutputs)
-			return "\033[1;31mSTATE_INVALID\033[0m";
-		else return "STATE_INVALID";
-		break;
-	case STATE_ON:
-		return "STATE_ON";
-		break;
-	case STATE_OFF:
-		return "STATE_OFF";
-		break;
-	case STATE_NONE: // For inputs
-		return "STATE_NONE";
-		break;
-	case STATE_VARIABLE:
-		return "STATE_VARIABLE";
-		break;
-	default:
-		if (colorizeBadOutputs)
-			return "\033[1;31munknown_state\033[0m";
-		else return "unknown_state";
 		break;
 	} // switch
 } // busTypeIs
@@ -472,9 +358,8 @@ void PinBus::dumpInfo(bool colorful = true) {
 	printf("Pin count: %d\n", pinCount);
 	printf("Pins: \n");
 	for (uint8_t i = 0; i < pinCount; i++) {
-		printf("\t Index: %d\tPin: %d\tMode: %s\tState: %s\n",
-		       i, pinAssignments[i], getModeString(i, colorful),
-		       getStateString(i, colorful));
+		printf("\t Index: %d\tPin: %d\tMode: %s\n",
+		       i, pinAssignments[i], getModeString(i, colorful));
 	}
 	printf("\n");
 } // busTypeIs

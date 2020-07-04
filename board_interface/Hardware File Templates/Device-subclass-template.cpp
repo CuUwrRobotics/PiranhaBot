@@ -32,18 +32,9 @@ const static uint8_t deviceTypeId = HardwareDescriptor::DEVICE_GPIO;
 
 // Pin States and Modes That This Chip can Accept
 // ==============================================
-const static uint8_t VALID_PIN_MODE_COUNT = 3;
-const PinMode validPinModes[VALID_PIN_MODE_COUNT] = {MODE_GPIO_INPUT,
-	                                                   MODE_GPIO_INPUT_X,
-	                                                   MODE_GPIO_OUTPUT};
-// Pin modes that this pin can read on. If none, use MODE_INVALID.
-const static uint8_t VALID_READ_MODE_COUNT = 2;
-const PinMode validReadModes[VALID_READ_MODE_COUNT] = {MODE_GPIO_INPUT,
-	                                                     MODE_GPIO_INPUT_X};
-const static uint8_t VALID_PIN_STATE_COUNT = 3;
-const PinState validPinStates[VALID_PIN_STATE_COUNT] = {STATE_ON,
-	                                                      STATE_OFF,
-	                                                      STATE_NONE};
+const static uint8_t VALID_PIN_MODE_COUNT = 2;
+const PinMode validPinModes[VALID_PIN_MODE_COUNT] = {MODE_OUTPUT,
+	                                                   MODE_INPUT};
 
 // Other Variables (Don't change these)
 // ====================================
@@ -80,26 +71,6 @@ inline PinMode getValidPinModes(uint8_t i){
 inline uint8_t getValidPinModesCount(){
 	return VALID_PIN_MODE_COUNT;
 } // getValidPinModesCount
-
-//
-inline PinMode getValidReadModes(uint8_t i){
-	return validReadModes[i];
-} // getValidReadModes
-
-//
-inline uint8_t getValidReadModesCount(){
-	return VALID_READ_MODE_COUNT;
-} // getValidReadModesCount
-
-//
-inline PinState getValidPinStates(uint8_t i){
-	return validPinStates[i];
-} // getValidPinStates
-
-//
-inline uint8_t getValidPinStatesCount(){
-	return VALID_PIN_STATE_COUNT;
-} // getValidPinStatesCount
 
 //
 inline uint8_t &getReservedPins(uint8_t i){
@@ -203,10 +174,6 @@ bool updateData(){
 	if (writeDataPending) {
 		printf("Writing data to pins (TODO).\n");
 		// NOTE: this process depends highly on the device being written to.
-		// First, set any pin states
-		for (uint8_t pin = 0; pin < PIN_COUNT; pin++) {
-			currentPinBus.setPinState(pin, requestedPinBus.getPinState(pin));
-		}
 		PIN_VALUE_DATA_TYPE pinValuesToSend[PIN_COUNT] = {0};
 		// For each pin, check if pin is in read mode. if not, write the value over.
 		for (uint8_t pin = 0; pin < PIN_COUNT; pin++) { // For each pin

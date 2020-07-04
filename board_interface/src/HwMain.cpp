@@ -101,8 +101,7 @@ void createAndInitInterfaces(){
 	// ***************************************************************************
 	busType = BUS_GPIO;
 	// GPIO interface: 16 pins
-	pinBus.createUniformPinBusFromSet(busType, 0, 15, MODE_GPIO_INPUT,
-	                                  STATE_NONE);
+	pinBus.createUniformPinBusFromSet(busType, 0, 15, MODE_INPUT);
 	interfaces[i] = new Interface_Gpio();
 	interfaces[i]->start(devices[d], pinBus, i);
 	pinBus.resetAll();
@@ -113,8 +112,7 @@ void createAndInitInterfaces(){
 	busType = BUS_GPIO;
 	d++;
 	// GPIO interface: 16 pins
-	pinBus.createUniformPinBusFromSet(busType, 0, 15, MODE_GPIO_INPUT,
-	                                  STATE_NONE);
+	pinBus.createUniformPinBusFromSet(busType, 0, 15, MODE_INPUT);
 	interfaces[i] = new Interface_Gpio();
 	interfaces[i]->start(devices[d], pinBus, i);
 	pinBus.resetAll();
@@ -125,31 +123,28 @@ void createAndInitInterfaces(){
 	busType = BUS_GPIO;
 	d++;
 	// LEAK interface: 8 pins
-	pinBus.createUniformPinBusFromSet(busType, 0, 7, MODE_GPIO_INPUT, STATE_NONE);
+	pinBus.createUniformPinBusFromSet(busType, 0, 7, MODE_INPUT);
 	interfaces[i] = new Interface_Leak();
 	interfaces[i]->start(devices[d], pinBus, i);
 	pinBus.resetAll();
 	i++;
 
 	// PWR interface: 4 pins
-	pinBus.createUniformPinBusFromSet(busType, 8, 11, MODE_GPIO_OUTPUT,
-	                                  STATE_OFF);
+	pinBus.createUniformPinBusFromSet(busType, 8, 11, MODE_OUTPUT);
 	interfaces[i] = new Interface_Power();
 	interfaces[i]->start(devices[d], pinBus, i);
 	pinBus.resetAll();
 	i++;
 
 	// Emergeny I/O telemetry interface: 3 pins
-	pinBus.createUniformPinBusFromSet(busType, 12, 14, MODE_GPIO_OUTPUT,
-	                                  STATE_OFF);
+	pinBus.createUniformPinBusFromSet(busType, 12, 14, MODE_OUTPUT);
 	interfaces[i] = new Interface_EmergIO();
 	interfaces[i]->start(devices[d], pinBus, i);
 	pinBus.resetAll();
 	i++;
 
 	// Led which warns of leaks/other major issues. interface: 2 pin
-	pinBus.createUniformPinBusFromSet(busType, 15, 15, MODE_GPIO_OUTPUT,
-	                                  STATE_OFF);
+	pinBus.createUniformPinBusFromSet(busType, 15, 15, MODE_OUTPUT);
 	interfaces[i] = new Interface_LeakLed();
 	interfaces[i]->start(devices[d], pinBus, i);
 	pinBus.resetAll();
@@ -160,7 +155,7 @@ void createAndInitInterfaces(){
 	busType = BUS_PWM;
 	d++;
 	// PWM interface: 16 pins
-	pinBus.createUniformPinBusFromSet(busType, 0, 15, MODE_PWM_OFF, STATE_OFF);
+	pinBus.createUniformPinBusFromSet(busType, 0, 15, MODE_OUTPUT);
 	interfaces[i] = new Interface_Pwm();
 	interfaces[i]->start(devices[d], pinBus, i);
 	pinBus.resetAll();
@@ -171,7 +166,7 @@ void createAndInitInterfaces(){
 	busType = BUS_PWM;
 	d++;
 	// PWM interface: 16 pins
-	pinBus.createUniformPinBusFromSet(busType, 0, 15, MODE_PWM_OFF, STATE_OFF);
+	pinBus.createUniformPinBusFromSet(busType, 0, 15, MODE_OUTPUT);
 	interfaces[i] = new Interface_Pwm();
 	interfaces[i]->start(devices[d], pinBus, i);
 	pinBus.resetAll();

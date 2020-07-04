@@ -32,17 +32,10 @@ const static uint8_t PIN_COUNT = 16;
 const static uint8_t deviceTypeId = HardwareDescriptor::DEVICE_PWM;
 const static uint8_t readableData = false; // If this chip can read data
 
-// Pin States and Modes That This Chip can Accept
+// Pin Modes That This Chip can Accept
 // ==============================================
-const static uint8_t VALID_PIN_MODE_COUNT = 2;
-const PinMode validPinModes[VALID_PIN_MODE_COUNT] = {MODE_PWM_OFF,
-	                                                   MODE_PWM_ON};
-// Pin modes that this pin can read on. If none, use MODE_INVALID.
-const static uint8_t VALID_READ_MODE_COUNT = 1;
-const PinMode validReadModes[VALID_READ_MODE_COUNT] = {MODE_INVALID};
-const static uint8_t VALID_PIN_STATE_COUNT = 3;
-const PinState validPinStates[VALID_PIN_STATE_COUNT] = {STATE_ON,
-	                                                      STATE_OFF};
+const static uint8_t VALID_PIN_MODE_COUNT = 1;
+const PinMode validPinModes[VALID_PIN_MODE_COUNT] = {MODE_OUTPUT};
 
 // Other Variables (Don't change these)
 // ====================================
@@ -83,26 +76,6 @@ inline PinMode getValidPinModes(uint8_t i){
 inline uint8_t getValidPinModesCount(){
 	return VALID_PIN_MODE_COUNT;
 } // getValidPinModesCount
-
-//
-inline PinMode getValidReadModes(uint8_t i){
-	return validReadModes[i];
-} // getValidReadModes
-
-//
-inline uint8_t getValidReadModesCount(){
-	return VALID_READ_MODE_COUNT;
-} // getValidReadModesCount
-
-//
-inline PinState getValidPinStates(uint8_t i){
-	return validPinStates[i];
-} // getValidPinStates
-
-//
-inline uint8_t getValidPinStatesCount(){
-	return VALID_PIN_STATE_COUNT;
-} // getValidPinStatesCount
 
 //
 inline uint8_t &getReservedPins(uint8_t i){
@@ -148,6 +121,8 @@ inline uint16_t getPinValue(uint8_t pin, DataType dataType){
 		return currentFrequencyValue;
 	if (dataType == PACKET_PWM_ON_TICKS)
 		return currentPinTicks[pin];
+	ROS_ERROR("getPinValue for device index %d got bad dataType %d for pin %d.",
+	          dataType, pin);
 	return 0;
 } // getPinValue
 
