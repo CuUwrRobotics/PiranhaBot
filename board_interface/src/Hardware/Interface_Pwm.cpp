@@ -71,10 +71,12 @@ uint16_t readPin(uint8_t pin, DataType dataType) {
 		ROS_ERROR("writePin: Recieved invalid dataType.\n");
 		return 0;
 	}
-	if (dataType = PACKET_PWM_DUTY_100) {
+	if (dataType == PACKET_PWM_DUTY_100) {
 		uint16_t pinValue = commDevice->getPinValue(pinBus.getPin(pin),
 		                                            PACKET_PWM_ON_TICKS);
-		return (uint16_t)((((float) pinValue) / MAX_PWM_TICKS) * 100);
+
+		// printf("Read: %d", pinValue);
+		return (pinValue / (MAX_PWM_TICKS / 100));
 	} else {
 		ROS_ERROR("writePin: Recieved invalid dataType: %d\n", dataType);
 		return 0;
@@ -111,7 +113,7 @@ uint8_t writePin(uint8_t pinNumber, uint16_t *data, DataType dataType,
 	 */
 	uint16_t dataForDevice;
 	DataType dataTypeForDevice;
-	if (dataType = PACKET_PWM_FREQ) {
+	if (dataType == PACKET_PWM_FREQ) {
 		dataTypeForDevice = PACKET_PWM_FREQ;
 		// check/set frequency
 		if (data[0] > MAX_PWM_FREQUENCY_VALUE) // Max value for frequency
@@ -119,14 +121,14 @@ uint8_t writePin(uint8_t pinNumber, uint16_t *data, DataType dataType,
 		else if (data[0] < 1) // Min value for frequency
 			dataForDevice = 1;
 		else dataForDevice = data[0];
-	} else if (dataType = PACKET_PWM_DUTY_100) {
+	} else if (dataType == PACKET_PWM_DUTY_100) {
 		dataTypeForDevice = PACKET_PWM_ON_TICKS;
 		if (data[0] > 100) // Max
 			dataForDevice = MAX_PWM_TICKS;
 		else
-			dataForDevice = (((float)data[0]) / 100) * MAX_PWM_TICKS;
+			dataForDevice = (data[0] * MAX_PWM_TICKS) / 100;
 		// set PWM on/off ticks based on duty cycle
-	} else if (dataType = PACKET_PWM_ON_TICKS) {
+	} else if (dataType == PACKET_PWM_ON_TICKS) {
 		dataTypeForDevice = PACKET_PWM_ON_TICKS;
 		if (data[0] > MAX_PWM_TICKS) // Max
 			dataForDevice = MAX_PWM_TICKS;
@@ -137,6 +139,7 @@ uint8_t writePin(uint8_t pinNumber, uint16_t *data, DataType dataType,
 		ROS_ERROR("writePin: Recieved invalid dataType: %d\n", dataType);
 		return 0;
 	} // Parent device expects data format PACKET_PWM_ON_TICKS
+	// printf("Writing: %d", dataForDevice);
 	return commDevice->setPinValue(pinBus.getPin(pinNumber), &dataForDevice,
 	                               dataTypeForDevice, interfaceTypeId);
 } /* writePin */

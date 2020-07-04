@@ -41,11 +41,21 @@
 
 #define DEVICE_ADDRESS 0x55
 
-const static uint8_t TOTAL_INTERFACES = 7;
-const static uint8_t TOTAL_DEVICES = 4;
+const static uint8_t TOTAL_INTERFACES = 8;
+const static uint8_t TOTAL_DEVICES = 5;
 
 Interface *interfaces[TOTAL_INTERFACES];
 Device *devices[TOTAL_DEVICES];
+
+// For colorful console output
+char D_GRAY[10] = "\033[1;30m";
+char RED[10] = "\033[1;31m";
+char SP[4] = "  "; // Spacing
+char YELLOW[10] = "\033[1;33m";
+char CYAN[10] = "\033[0;36m";
+char GREEN[10] = "\033[1;32m";
+char WHITE[10] = "\033[1;37m";
+char NO_COLOR[7] = "\033[0m";
 
 /**
  * Fancy display of all devices, interfaces, and pins.
@@ -56,18 +66,11 @@ void dumpConfiguration(bool shrinkRepeatedPins){
 	bool moreDevfLeft = true;
 	bool moreIntfLeft = true;
 	bool morePinsLeft = true;
-	char D_GRAY[10] = "\033[1;30m";
-	char RED[10] = "\033[1;31m";
-	char SP[4] = "  "; // Spacing
-	char YELLOW[10] = "\033[1;33m";
-	char CYAN[10] = "\033[0;36m";
-	char GREEN[10] = "\033[1;32m";
-	char WHITE[10] = "\033[1;37m";
-	char NO_COLOR[7] = "\033[0m";
-	printf("\nCONFIGURATION DUMP:\n");
+	printf("%s", YELLOW);
 	for (int i = 0; i < 80; i++)
 		printf(":");
-	printf("\n");
+	printf("%s\n", NO_COLOR);
+	printf("\nCONFIGURATION DUMP:\n");
 	for (uint8_t dev = 0; dev < TOTAL_DEVICES; dev++) {
 		if (dev == TOTAL_DEVICES - 1) {
 			printf("└─");
@@ -101,7 +104,7 @@ void dumpConfiguration(bool shrinkRepeatedPins){
 				printf("%s%s", moreDevfLeft ? "│" : " ", SP); // Formatting
 				printf("%s%s", moreIntfLeft ? "│" : " ", SP); // Formatting
 				printf("└─"); // Formatting
-				if (!interfaces[intf]->ready()){
+				if (!interfaces[intf]->ready()) {
 					printf("Interface not ready, no pins to show.\n");
 					continue;
 				}
@@ -169,13 +172,15 @@ void dumpConfiguration(bool shrinkRepeatedPins){
 	for (uint8_t intf = 0; intf < TOTAL_INTERFACES; intf++) {
 		if (interfaces[intf]->getParentDeviceIndex() ==
 		    HardwareDescriptor::DEVICE_INVALID) {
-			printf("%sInterface #%d not listed due to a bad initialization.\nMost likely that start() was never called.%s\n",
-			       RED, intf, NO_COLOR);
+			printf(
+				"%sInterface #%d not listed due to a bad initialization.\nMost likely that start() was never called.%s\n",
+				RED, intf, NO_COLOR);
 		}
 	}
+	printf("%s", YELLOW);
 	for (int i = 0; i < 80; i++)
 		printf(":");
-	printf("\n");
+	printf("%s\n", NO_COLOR);
 } // dumpConfigruation
 
 /**
@@ -185,18 +190,27 @@ void dumpConfiguration(bool shrinkRepeatedPins){
 void createAndInitDevices(){
 	uint8_t i = 0; // incremented to allow devices to keep track of their own index.
 
+	// GPIO 0
 	devices[i] = new Device_Gpio_Mcp23017();
 	devices[i]->init(i, DEVICE_ADDRESS + i, BUS_GPIO);
 	i++;
 
+	// GPIO 1
 	devices[i] = new Device_Gpio_Mcp23017();
 	devices[i]->init(i, DEVICE_ADDRESS + i, BUS_GPIO);
 	i++;
 
+	// GPIO 2 (only accessible through otehr interfaces, like LEAK)
 	devices[i] = new Device_Gpio_Mcp23017();
 	devices[i]->init(i, DEVICE_ADDRESS + i, BUS_GPIO);
 	i++;
 
+	// PWM 0
+	devices[i] = new Device_Pwm_Pca9685();
+	devices[i]->init(i, DEVICE_ADDRESS + i, BUS_PWM);
+	i++;
+
+	// PWM 1
 	devices[i] = new Device_Pwm_Pca9685();
 	devices[i]->init(i, DEVICE_ADDRESS + i, BUS_PWM);
 	i++;
@@ -225,7 +239,8 @@ void createAndInitInterfaces(){
 	// ***************************************************************************
 	busType = BUS_GPIO;
 	// GPIO interface: 16 pins
-	pinBus.createUniformPinBusFromSet(busType, 0, 15, MODE_GPIO_INPUT, STATE_NONE);
+	pinBus.createUniformPinBusFromSet(busType, 0, 15, MODE_GPIO_INPUT,
+	                                  STATE_NONE);
 	interfaces[i] = new Interface_Gpio();
 	interfaces[i]->start(devices[d], pinBus, i);
 	pinBus.resetAll();
@@ -236,7 +251,8 @@ void createAndInitInterfaces(){
 	busType = BUS_GPIO;
 	d++;
 	// GPIO interface: 16 pins
-	pinBus.createUniformPinBusFromSet(busType, 0, 15, MODE_GPIO_INPUT, STATE_NONE);
+	pinBus.createUniformPinBusFromSet(busType, 0, 15, MODE_GPIO_INPUT,
+	                                  STATE_NONE);
 	interfaces[i] = new Interface_Gpio();
 	interfaces[i]->start(devices[d], pinBus, i);
 	pinBus.resetAll();
@@ -281,7 +297,18 @@ void createAndInitInterfaces(){
 	// ***************************************************************************
 	busType = BUS_PWM;
 	d++;
-	// GPIO interface: 16 pins
+	// PWM interface: 16 pins
+	pinBus.createUniformPinBusFromSet(busType, 0, 15, MODE_PWM_OFF, STATE_OFF);
+	interfaces[i] = new Interface_Pwm();
+	interfaces[i]->start(devices[d], pinBus, i);
+	pinBus.resetAll();
+	i++;
+
+	// PWM 1 (Device index 4)
+	// ***************************************************************************
+	busType = BUS_PWM;
+	d++;
+	// PWM interface: 16 pins
 	pinBus.createUniformPinBusFromSet(busType, 0, 15, MODE_PWM_OFF, STATE_OFF);
 	interfaces[i] = new Interface_Pwm();
 	interfaces[i]->start(devices[d], pinBus, i);
@@ -297,6 +324,89 @@ void createAndInitInterfaces(){
 } // createAndInitInterfaces
 
 /**
+ * @param direction defines whether to make the smallest pin the smallest on-time
+ * (true) or the largest (false)
+ */
+
+bool testPwm(uint8_t intf, uint8_t dev, bool direction) {
+	bool returnVal = true;
+	uint64_t hd;
+	uint16_t frequency;
+	uint16_t data;
+
+	printf("%s", YELLOW);
+	for (int i = 0; i < 80; i++)
+		printf(":");
+	printf("%s\n", NO_COLOR);
+
+	printf("PWM test beginning.\n\tInterface:\t%s%d%s\n\tDevice:\t\t%s%d%s\n",
+	       WHITE, intf, NO_COLOR, WHITE, dev, NO_COLOR);
+	frequency = 0xFFFF; // Set to maximum value; should get brought down to 3500
+	for (int pin = 0; pin < interfaces[intf]->getPinCount(); pin++) {
+		hd = interfaces[intf]->getHardwareDescriptor(pin);
+		data = 256 * pin;
+		if (direction) data = 4095 - data;
+		interfaces[intf]->writePin(pin, &frequency, PACKET_PWM_FREQ, hd);
+		interfaces[intf]->writePin(pin, &data, PACKET_PWM_ON_TICKS, hd);
+		devices[dev]->updateData();
+	}
+	printf("Results:\n========\n");
+	// All pins should have same freq
+	frequency = interfaces[intf]->readPin(0, PACKET_PWM_FREQ);
+	printf("Frequency: ");
+	if (frequency != 3500) {
+		returnVal = false;
+		printf("%s", RED);
+	} else {
+		printf("%s", GREEN);
+	}
+	printf("%d%s\n", frequency, NO_COLOR);
+	bool dataGood = false;
+	for (int pin = 0; pin < interfaces[intf]->getPinCount(); pin++) {
+		data = interfaces[intf]->readPin(pin, PACKET_PWM_ON_TICKS);
+		if (direction) {
+			// data = 4095 - data;
+			dataGood = (data == 4095 - (256 * pin));
+		} else {
+			dataGood = (data == 256 * pin);
+		}
+		printf(" - Pin %s%d%s:\t%s%d%s\n", WHITE, pin, NO_COLOR,
+		       (dataGood) ? GREEN : RED, data, NO_COLOR);
+		if (!dataGood) returnVal = false;
+	}
+
+	printf("%s", YELLOW);
+	for (int i = 0; i < 80; i++)
+		printf(":");
+	printf("%s\n", NO_COLOR);
+
+	return returnVal;
+	// }
+} // testPwm
+
+/**
+ *
+ */
+
+void runBitTest(){
+	// run built in testing
+	bool testsOk = true;
+	// Run the tests andflag if one fails, since they dump a LOT of data.
+	// Test all PWM, switching the direction of the incrementing on time
+	if (!testPwm(6, 3, true)) testsOk = false;
+	if (!testPwm(6, 3, false)) testsOk = false;
+	if (!testPwm(7, 4, true)) testsOk = false;
+	if (!testPwm(7, 4, false)) testsOk = false;
+	if (!testsOk) {
+		printf(
+			"%sWARINING: AT LEAST ONE BIT TEST HAS FAILED. Read the data above to find the reason.%s\n",
+			RED, NO_COLOR);
+	}	else {
+		printf("%sAll BIT tests good :)%s\n", GREEN, NO_COLOR);
+	}
+} // runBitTest
+
+/**
  * @return TODO
  */
 
@@ -306,4 +416,5 @@ int main(){
 	for (uint8_t i = 0; i < TOTAL_DEVICES; i++)
 		devices[i]->updateData();
 	dumpConfiguration(true); // All set; dump data. Enter false if you want ot see full pin lists
+	runBitTest();
 } // main
