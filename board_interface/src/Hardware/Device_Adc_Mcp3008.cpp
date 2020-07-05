@@ -35,6 +35,10 @@ uint8_t reservedPins[PIN_COUNT];
 // For storing tick rate (duty cycle)
 float pinValues[PIN_COUNT];
 
+// These are specific to the MCP3008 on the interfacing board REV A
+const float ADC_STEPS = 1024;
+const float AVCC_THEORETICAL_VALUE = 5.00;
+
 /* These give the base Device class access to the above local variables. They
  * don't need any modification. See more info about each function in the Device
  * class.
@@ -107,10 +111,19 @@ bool deviceInit(){
 
 public:
 
-// Simple retuning function which needs no modification.
+/**
+ * @param pin TODO
+ * @param dataType TODO
+ * @return TODO
+ */
+
 inline float getPinValue(uint8_t pin, DataType dataType){
-	if (dataType == PACKET_ADC_DIRECT_10BIT)
+	if (dataType == PACKET_ADC_DIRECT) // Data from a pin
 		return pinValues[pin];
+	if (dataType == PACKET_ADC_STEPS) // How many steps are in the ADC
+		return ADC_STEPS;
+	if (dataType == PACKET_ADC_AVCC_VOLTAGE) // Voltage of the ADC
+		return AVCC_THEORETICAL_VALUE;
 	ROS_ERROR("getPinValue for device index %d got bad dataType %d for pin %d.",
 	          dataType, pin);
 	return 0;
@@ -140,11 +153,28 @@ bool updateData(){
 		return false;
 	// Check if any data is readable on any pins. If so, read it.
 	printf("Reading data from pins (TODO).\n");
-	// READ DATA HERE
+	// READ DATA HERE, THESE ARE FOR TESTING:
 	for (uint8_t pin = 0; pin < PIN_COUNT; pin++) {
-		pinValues[pin] = (0.625 * LSB_PER_VOLT) * (pin + 1); // Stairstepped values for testing
-		// currentPinTicks[pin] = 0; // Just set to zero
+		pinValues[pin] = (0.625 * ADC_STEPS / AVCC_THEORETICAL_VALUE) * (pin + 1);
 	}
+	// Hacky way of getting correct telemetry data
+	if (deviceIndex == 7) // CURRENT 0
+		pinValues[0] = 389; // -10 amps
+	if (deviceIndex == 7) // CURRENT 1
+		pinValues[1] = 635; // +10 amps
+	if (deviceIndex == 7) // VREF calibration, should be around 3V
+		pinValues[2] = 614; // 3v (no adjustemnt)
+	// pinValues[2] = 635;    // 3.1v (data is adjusted)
+	if (deviceIndex == 7) // TEMP 0
+		pinValues[3] = 178; // 25'C
+	if (deviceIndex == 7) // PL 0
+		pinValues[4] = 676; // 3.3v
+	if (deviceIndex == 7) // PL 1
+		pinValues[5] = 1024; // 5v
+	if (deviceIndex == 7) // PL 2
+		pinValues[6] = 768; // 12v ==> 3.75v with resitor divider
+	if (deviceIndex == 7) // PL 3
+		pinValues[7] = 819; // 48v ==> 4v with resitor divider
 	return true;
 } // updateData
 }

@@ -58,10 +58,10 @@ inline char *getInterfaceName(){
  * updateData() will be called after this, so there's no needto call it here.
  */
 
-void setDefaultModes(){
+void prepareInterface(){
 	pinBus.setAllPins(MODE_INPUT);
 	commDevice->setPinModes(pinBus, interfaceTypeId);
-} // setDefaultModes
+} // prepareInterface
 
 /**
  * Reads data from the comm device and formats into requested data format, if possible.
@@ -86,7 +86,8 @@ float *readPin(uint8_t pin, DataType dataType) {
 
 uint8_t writePin(uint8_t pinNumber, float *data, DataType dataType,
                  uint64_t hd){
-	ROS_INFO("writePin: Data cannot be written to the LEAK interface!");
+	ROS_INFO("writePin: Data cannot be written to the %s interface!",
+	         INTERFACE_NAME);
 	return 0;
 } /* writePin */
 
@@ -98,7 +99,8 @@ uint8_t writePin(uint8_t pinNumber, float *data, DataType dataType,
  */
 
 uint8_t setPinMode(uint8_t pinNumber, PinMode pinMode, uint64_t hd){
-	ROS_INFO("setPinMode: Data cannot be written to the LEAK interface!");
+	ROS_INFO("setPinMode: Data cannot be written to the %s interface!",
+	         INTERFACE_NAME);
 	return 0;
 } /* setPinMode */
 }

@@ -87,6 +87,11 @@ void createAndInitDevices(){
 	devices[i]->init(i, DEVICE_ADDRESS + i, BUS_ADC);
 	i++;
 
+	// ADC 2 (only accessible through other interfaces.)
+	devices[i] = new Device_Adc_Mcp3008();
+	devices[i]->init(i, DEVICE_ADDRESS + i, BUS_ADC);
+	i++;
+
 	// variable value must be changed if this is true
 	if (i != TOTAL_DEVICES) {
 		ROS_ERROR(
@@ -204,6 +209,66 @@ void createAndInitInterfaces(){
 	pinBus.resetAll();
 	i++;
 
+	// ADC 2 (Device index 6)
+	// ***************************************************************************
+	busType = BUS_ADC;
+	d++;
+// CURRENT interface: 1 pin
+	pinBus.createUniformPinBusFromSet(busType, 0, 0, MODE_INPUT);
+	interfaces[i] = new Interface_Current_Acs781();
+	interfaces[i]->start(devices[d], pinBus, i);
+	pinBus.resetAll();
+	i++;
+
+	// CURRENT interface: 1 pin
+	pinBus.createUniformPinBusFromSet(busType, 1, 1, MODE_INPUT);
+	interfaces[i] = new Interface_Current_Acs781();
+	interfaces[i]->start(devices[d], pinBus, i);
+	pinBus.resetAll();
+	i++;
+
+	// VOLTAGE REFRENCE interface: 1 pin
+	pinBus.createUniformPinBusFromSet(busType, 2, 2, MODE_INPUT);
+	interfaces[i] = new Interface_Voltage_Refrence();
+	interfaces[i]->start(devices[d], pinBus, i);
+	pinBus.resetAll();
+	i++;
+
+	// TEMP interface: 1 pin
+	pinBus.createUniformPinBusFromSet(busType, 3, 3, MODE_INPUT);
+	interfaces[i] = new Interface_Temp_Lm62();
+	interfaces[i]->start(devices[d], pinBus, i);
+	pinBus.resetAll();
+	i++;
+
+	// POWER_LINE interface: 1 pin (3.3v)
+	pinBus.createUniformPinBusFromSet(busType, 4, 4, MODE_INPUT);
+	interfaces[i] = new Interface_Power_Line();
+	interfaces[i]->start(devices[d], pinBus, i);
+	pinBus.resetAll();
+	i++;
+
+	// POWER_LINE interface: 1 pin (5v)
+	pinBus.createUniformPinBusFromSet(busType, 5, 5, MODE_INPUT);
+	interfaces[i] = new Interface_Power_Line();
+	interfaces[i]->start(devices[d], pinBus, i);
+	pinBus.resetAll();
+	i++;
+
+	// POWER_LINE interface: 1 pin (12v [?])
+	pinBus.createUniformPinBusFromSet(busType, 6, 6, MODE_INPUT);
+	interfaces[i] = new Interface_Power_Line();
+	interfaces[i]->start(devices[d], pinBus, i);
+	pinBus.resetAll();
+	i++;
+
+	// POWER_LINE interface: 1 pin (VIN, 48V)
+	pinBus.createUniformPinBusFromSet(busType, 7, 7, MODE_INPUT);
+	interfaces[i] = new Interface_Power_Line();
+	interfaces[i]->start(devices[d], pinBus, i);
+	pinBus.resetAll();
+	i++;
+
 	// variable value must be changed if this is true
 	if (i != TOTAL_INTERFACES) {
 		ROS_ERROR(
@@ -268,65 +333,130 @@ void runBitTest(){
  */
 
 void calibrateAdc() {
-	const float actualDiodeVoltage = 3; // This should be measured for accuracy
-	const float actualDiodeTolerance = .06; // 2%
-	const float adcTolerance = .01; // (5v/2^9) for a 10-bit ADC after removing LSB
-	const float worstTolerance = adcTolerance + actualDiodeTolerance;
-	float diodeVoltage = 3.1; // remove this
+	// const float actualDiodeVoltage = 3; // This should be measured for accuracy
+	// const float actualDiodeTolerance = .06; // 2%
+	// const float adcTolerance = .01; // (5v/2^9) for a 10-bit ADC after removing LSB
+	float diodeVoltage = 3.1; // Measured voltage. Remove this for real calibration
 	float offsetRatio;
-	float avccTheoretical = 5; // Should be 5v, but it won't be
 	float toleranceRatio; // Multiply by a voltage to get tolerance of estimate.
 	float toleranceAtAvcc;
 	float avccActual;
-	// GETS VALUES HERE
-	printf("\n%sCalibrate ADC calibration values:%s\n", YELLOW,
+	uint64_t hd;
+	// First, set the truth values.
+	float diodeData[2] = {actualDiodeVoltage, actualDiodeTolerance};
+	hd = interfaces[vrefIndex]->getHardwareDescriptor(0);
+	interfaces[vrefIndex]->writePin(0, diodeData,
+	                                PACKET_REF_KNOWN_VOLTS_WITH_TOLERANCE,
+	                                hd);
+	interfaces[vrefIndex]->writePin(0, &adcTolerance,
+	                                PACKET_REF_ADC_TOLERANCE,
+	                                hd);
+	if (!interfaces[vrefIndex]->readPin(0,  PACKET_REF_READY)) {
+		printf("%sVREF Interface did not give ready, cannot calibrate!%s\n");
+		return;
+	}
+	float *refResultsPtr;
+	// float refResults[2];
+	refResultsPtr = interfaces[vrefIndex]->readPin(0,
+	                                               PACKET_ADC_OFFSET_AND_TOLERANCE_RATIOS);
+	offsetRatio = refResultsPtr[0];
+	toleranceRatio = refResultsPtr[1];
+	float measuredDiodeVoltage =
+		*interfaces[vrefIndex]->readPin(0, PACKET_REF_VOLTAGE_NO_CORRECT);
+
+	printf("\n%sCalibrate ADC: Got calibration values:%s\n", YELLOW,
 	       NO_COLOR);
 	printf("\tActual diode voltage\t  = %s%5.2f%sV\t±%s%.2f%sV\n",
 	       WHITE, actualDiodeVoltage, NO_COLOR,
 	       WHITE, actualDiodeTolerance, NO_COLOR);
 	printf("\tMeasured diode voltage\t  = %s%5.2f%sV\t±%s%.2f%sV\n",
-	       WHITE, diodeVoltage, NO_COLOR,
+	       WHITE, measuredDiodeVoltage, NO_COLOR,
 	       WHITE, adcTolerance, NO_COLOR);
-	offsetRatio = actualDiodeVoltage / diodeVoltage;
-	avccActual = offsetRatio * 5;
+	// offsetRatio = actualDiodeVoltage / diodeVoltage;
+	avccActual = offsetRatio * avccTheoretical;
 	// Gets a tolerance ratio; multiply by the voltage to get tolerance.
-	toleranceRatio = ((actualDiodeTolerance / actualDiodeVoltage) +
-	                  (adcTolerance / diodeVoltage));
+	// toleranceRatio = ((actualDiodeTolerance / actualDiodeVoltage) +
+	//                   (adcTolerance / diodeVoltage));
 	toleranceAtAvcc = toleranceRatio * avccActual;
-	printf("\tOffset ratio          \t  = %s%5.2f%s\n",
-	       WHITE, offsetRatio, NO_COLOR);
+	printf("\tOffset ratio          \t  = %s%5.2f%s\t±%s%4.2f%s%\n",
+	       WHITE, offsetRatio, NO_COLOR,
+	       WHITE, toleranceRatio * 100, NO_COLOR);
 	printf("\t%sAt measured %s5.00%sV, actual = %s%5.2f%sV\t±%s%.2f%sV\n",
 	       NO_COLOR, // Text color
 	       WHITE, NO_COLOR, // '5.00' color
 	       WHITE, avccActual, NO_COLOR,
 	       WHITE, toleranceAtAvcc, NO_COLOR);
 	// Pack data into any device which identifies as an ADC.
-	uint64_t hd;
+	printf("%sCalibrate ADC: Storing values:%s\n", YELLOW,
+	       NO_COLOR);
 	float data[2] = {offsetRatio, toleranceRatio};
 	for (uint8_t intf = 0; intf < TOTAL_INTERFACES; intf++) {
-		if (interfaces[intf]->getInterfaceTypeId() ==
+		// For any interfaces which use an ADC device
+		if (interfaces[intf]->getParentTypeId() ==
 		    HardwareDescriptor::DEVICE_ADC) {
 			hd = interfaces[intf]->getHardwareDescriptor(0);
 			interfaces[intf]->writePin(0, data,
-			                           PACKET_ADC_AVCC_OFFSET_AND_TOLERANCE_RATIOS,
+			                           PACKET_ADC_OFFSET_AND_TOLERANCE_RATIOS,
 			                           hd);
+			printf("\tData has been stored in %s%s%s interface, index %s%d%s.\n",
+			       WHITE, interfaces[intf]->getInterfaceName(), NO_COLOR,
+			       WHITE, intf, NO_COLOR);
 		}
 	}
-	printf("\tData has been stored in ADCs.\n");
+} // calibrateAdc
 
-	// printf("ADC DUMP: ADC 0\n");
-	// float *voltagesIn;
-	// // float *data;
-	// for (int pin = 0; pin < interfaces[8]->getPinCount(); pin++) {
-	// 	printf("Pin %d:\t%s%.0f%s", pin, WHITE,
-	// 	       *interfaces[8]->readPin(pin, PACKET_ADC_DIRECT_10BIT), NO_COLOR);
-	// 	voltagesIn = interfaces[8]->readPin(pin, PACKET_ADC_VOLTAGE_WITH_TOLERANCE);
-	// 	printf("\t%s%.2f%sV\t±%s%.2f%sV\n",
-	// 	       WHITE, voltagesIn[0], NO_COLOR,
-	// 	       WHITE, voltagesIn[1], NO_COLOR);
-	// }
-	// printf("\n");
-} // dumpAdc
+/**
+ *
+ */
+
+void setupPowerLineReaders() {
+	// These are all chosen based on the interface board REV A.
+	printf("\n%sPower Line Startup: assigning resistor divider values.%s\n",
+	       YELLOW,
+	       NO_COLOR);
+	uint64_t hd;
+	// Technically in Ohms, but the ratio is all that matters.
+	// To reduce error, measure actual resistors once installed, enter values, and
+	// enter a lower tolerance.
+	float highResistorValuesAndTolerances[4][2] = {
+		{0, 0},
+		{0, 0},
+		{2.2, 0.05},
+		{11,  0.05}};
+	float lowResistorValuesAndTolerances[4][2] = {
+		{0, 0},
+		{0, 0},
+		{1, 0.05},
+		{1, 0.05}};
+	for (uint8_t i = 14; i < 18; i++) {
+		hd = interfaces[i]->getHardwareDescriptor(0);
+		interfaces[i]->writePin(0, highResistorValuesAndTolerances[i - 14],
+		                        PACKET_PL_HIGH_RESISTOR_WITH_TOLERANCE,
+		                        hd);
+		interfaces[i]->writePin(0, lowResistorValuesAndTolerances[i - 14],
+		                        PACKET_PL_LOW_RESISTOR_WITH_TOLERANCE,
+		                        hd);
+		printf("\tPL interface %s%d%s:\t%s%5.2f%sV\n",
+		       WHITE, i, NO_COLOR,
+		       WHITE,
+		       *interfaces[i]->readPin(0, PACKET_ADC_VOLTAGE_WITH_TOLERANCE),
+		       NO_COLOR);
+	}
+} // setupPowerLineReaders
+
+/**
+ * @return TODO
+ */
+
+void startupConfig(){
+	printf("CONFIGURING BOARD INTERFACE PACKAGE");
+	for (uint8_t i = 0; i < TOTAL_DEVICES; i++)
+		devices[i]->updateData();
+	calibrateAdc(); // Calibrate the ADCs based on the known real AVCC value.
+	setupPowerLineReaders(); // Assign resitor values for the power line interfaces
+	for (uint8_t i = 0; i < TOTAL_DEVICES; i++)
+		devices[i]->updateData();
+} // startupContig
 
 /**
  * @return TODO
@@ -335,19 +465,57 @@ void calibrateAdc() {
 int main(){
 	createAndInitDevices(); // Setup Devices
 	createAndInitInterfaces(); // Setup Interfaces
-	for (uint8_t i = 0; i < TOTAL_DEVICES; i++)
-		devices[i]->updateData();
+	// YAML CONFIG GOES HERE
 	// All set; dump data
 	dumpConfiguration(true, interfaces, devices); // False for full pin listing
-	calibrateAdc(); // Calibrate the ADCs based on the known real AVCC value.
+	startupConfig();
 	runBitTest(); // Test interfaces
+
+	float *currentIn;
+	printf("CURRENT DUMP: CURRENT 0\n");
+	printf("\tPin %d:\t%s%.0f%s", 0, WHITE,
+	       *interfaces[10]->readPin(0, PACKET_ADC_DIRECT), NO_COLOR);
+	currentIn = interfaces[10]->readPin(0, PACKET_CURRENT_AMPS_WITH_TOLERANCE);
+	printf("\t%s%.2f%sA\t±%s%.2f%sA\n",
+	       WHITE, currentIn[0], NO_COLOR,
+	       WHITE, currentIn[1], NO_COLOR);
+
+	printf("CURRENT DUMP: CURRENT 1\n");
+	printf("\tPin %d:\t%s%.0f%s", 0, WHITE,
+	       *interfaces[11]->readPin(0, PACKET_ADC_DIRECT), NO_COLOR);
+	currentIn = interfaces[11]->readPin(0, PACKET_CURRENT_AMPS_WITH_TOLERANCE);
+	printf("\t%s%.2f%sA\t±%s%.2f%sA\n",
+	       WHITE, currentIn[0], NO_COLOR,
+	       WHITE, currentIn[1], NO_COLOR);
+
+	printf("TEMP DUMP: TEMP 0\n");
+	printf("\tPin %d:\t%s%.0f%s\t%s%.2f%sV", 0,
+	       WHITE, *interfaces[13]->readPin(0, PACKET_ADC_DIRECT), NO_COLOR,
+	       WHITE, *interfaces[13]->readPin(0, PACKET_ADC_VOLTAGE), NO_COLOR);
+	currentIn = interfaces[13]->readPin(0, PACKET_TEMP_C_WITH_TOLERANCE);
+	printf("\t%s%5.2f%s'C\t±%s%.2f%s'C\n",
+	       WHITE, currentIn[0], NO_COLOR,
+	       WHITE, currentIn[1], NO_COLOR);
+
+	printf("POWER LINE DUMP:\n");
+	for (uint8_t i = 14; i < 18; i++) {
+		currentIn = interfaces[i]->readPin(0, PACKET_ADC_VOLTAGE_WITH_TOLERANCE);
+		printf("\tPL #%s%d%s:\t%s%5.2f%sV\t±%s%5.2f%sV\n",
+		       WHITE, i, NO_COLOR,
+		       WHITE,
+		       currentIn[0],
+		       NO_COLOR,
+		       WHITE,
+		       currentIn[1],
+		       NO_COLOR);
+	}
 
 	printf("ADC DUMP: ADC 0\n");
 	float *voltagesIn;
 	// float *data;
 	for (int pin = 0; pin < interfaces[8]->getPinCount(); pin++) {
-		printf("Pin %d:\t%s%.0f%s", pin, WHITE,
-		       *interfaces[8]->readPin(pin, PACKET_ADC_DIRECT_10BIT), NO_COLOR);
+		printf("\tPin %d:\t%s%.0f%s", pin, WHITE,
+		       *interfaces[8]->readPin(pin, PACKET_ADC_DIRECT), NO_COLOR);
 		voltagesIn = interfaces[8]->readPin(pin, PACKET_ADC_VOLTAGE_WITH_TOLERANCE);
 		printf("\t%s%.2f%sV\t±%s%.2f%sV\n",
 		       WHITE, voltagesIn[0], NO_COLOR,

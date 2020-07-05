@@ -58,19 +58,17 @@ const static uint8_t INTF_GPIO							= 0x02;
 const static uint8_t INTF_ADC								= 0x03;
 const static uint8_t INTF_PWR_SWITCHING			= 0x04;
 const static uint8_t INTF_ARDUINO						= 0x05;
-const static uint8_t INTF_TEL_TEMP					= 0x06;
+const static uint8_t INTF_TEMP							= 0x06;
 const static uint8_t INTF_TEL_PRESSURE			= 0x07;
-const static uint8_t INTF_TEL_CURRENT				= 0x08;
-const static uint8_t INTF_TEL_3V3						= 0x09;
-const static uint8_t INTF_TEL_5V						= 0x0A;
-const static uint8_t INTF_TEL_12V						= 0x0B;
-const static uint8_t INTF_TEL_VIN						= 0x0C;
+const static uint8_t INTF_CURRENT						= 0x08;
+const static uint8_t INTF_POWER_LINE				= 0x09;
 const static uint8_t INTF_TEL_SWITCHES			= 0x0D;
 const static uint8_t INTF_TEL_LEAK					= 0x0E;
 const static uint8_t INTF_TEL_EMERGENCY_IO	= 0x0F;
 const static uint8_t INTF_LEAK_WARN					= 0x10; // Leak warn LED
 const static uint8_t INTF_ARDUINO_GPIO_PWM	= 0x11;
 const static uint8_t INTF_ARDUINO_ADC				= 0x12;
+const static uint8_t INTF_VREF							= 0x13;
 // Digital Device names
 // The device used to control or read an interface; note that these can overlap inteface names
 // ****************************************************************************
@@ -191,26 +189,17 @@ static char *interfaceIdToCharArray(uint8_t intf){
 	case INTF_ARDUINO:
 		return "INTF_ARDUINO";
 		break;
-	case INTF_TEL_TEMP:
+	case INTF_TEMP:
 		return "INTF_TEL_TEMP";
 		break;
 	case INTF_TEL_PRESSURE:
 		return "INTF_TEL_PRESSURE";
 		break;
-	case INTF_TEL_CURRENT:
-		return "INTF_TEL_CURRENT";
+	case INTF_CURRENT:
+		return "INTF_CURRENT";
 		break;
-	case INTF_TEL_3V3:
-		return "INTF_TEL_3V3";
-		break;
-	case INTF_TEL_5V:
-		return "INTF_TEL_5V";
-		break;
-	case INTF_TEL_12V:
-		return "INTF_TEL_12V";
-		break;
-	case INTF_TEL_VIN:
-		return "INTF_TEL_VIN";
+	case INTF_POWER_LINE:
+		return "INTF_POWER_LINE";
 		break;
 	case INTF_TEL_SWITCHES:
 		return "INTF_TEL_SWITCHES";
@@ -229,6 +218,8 @@ static char *interfaceIdToCharArray(uint8_t intf){
 		break;
 	case INTF_ARDUINO_ADC:
 		return "INTF_ARDUINO_ADC";
+	case INTF_VREF:
+		return "INTF_VREF";
 		break;
 	default:
 		return "no_valid_interface_found";

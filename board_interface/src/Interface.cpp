@@ -39,7 +39,7 @@ virtual uint8_t writePin(uint8_t pinNumber, float *data, DataType dataType,
 
 virtual float *readPin(uint8_t pin, DataType dataType) = 0;
 
-virtual void setDefaultModes() = 0;
+virtual void prepareInterface() = 0;
 
 virtual uint8_t getPinCount() = 0;
 
@@ -94,7 +94,7 @@ bool start(Device *device, PinBus pb, uint8_t ifaceIndex) {
 		                                             INVALID_PIN_NUMBER);
 	pinBus = pb;
 	if (commDevice->attachInterface(pinBus, getInterfaceTypeId())) {
-		setDefaultModes(); // Set interface-specific default modes to pinBus
+		prepareInterface(); // Set interface-specific default modes to pinBus
 		initSuccessful = true;
 	}
 	return initSuccessful;

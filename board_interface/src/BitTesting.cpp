@@ -686,7 +686,7 @@ bool testAdc(Interface *intf, Device *dev) {
 	printf("Results:\n========\n");
 	// Get ADC calibration values
 	calibrationDataIn = intf->readPin(0,
-	                                  PACKET_ADC_AVCC_OFFSET_AND_TOLERANCE_RATIOS);
+	                                  PACKET_ADC_OFFSET_AND_TOLERANCE_RATIOS);
 	if (calibrationDataIn[1] == 1) { // If the tolerance is 100%
 		printf(
 			"%sADC Calibration has NOT been assigned. Default values have been assigned.%s\n",
@@ -695,7 +695,7 @@ bool testAdc(Interface *intf, Device *dev) {
 		calibrationDataOut[1] = 1; // makes tolerance = voltage to show no calibration
 		hd = intf->getHardwareDescriptor(0);
 		intf->writePin(0, calibrationDataOut,
-		               PACKET_ADC_AVCC_OFFSET_AND_TOLERANCE_RATIOS, hd); // Fix the mode
+		               PACKET_ADC_OFFSET_AND_TOLERANCE_RATIOS, hd); // Fix the mode
 		returnVal = false; // Return failure for test
 	} else printf("%sCalibration offset ratio = %5.2f.%s\n",
 		            GREEN, calibrationDataIn[0], NO_COLOR);

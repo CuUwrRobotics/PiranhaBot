@@ -107,7 +107,7 @@ bool deviceInit(){
 
 public:
 
-// Simple retuning function which needs no modification.
+
 inline float getPinValue(uint8_t pin, DataType dataType){
 	if (dataType == PACKET_PWM_FREQ)
 		return currentFrequencyValue;

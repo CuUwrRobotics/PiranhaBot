@@ -58,10 +58,10 @@ inline char *getInterfaceName(){
  * updateData() will be called after this, so there's no needto call it here.
  */
 
-void setDefaultModes(){
+void prepareInterface(){
 	pinBus.setAllPins(MODE_OUTPUT);
 	commDevice->setPinModes(pinBus, interfaceTypeId);
-} // setDefaultModes
+} // prepareInterface
 
 /**
  * Reads data from the comm device and formats into requested data format, if possible.

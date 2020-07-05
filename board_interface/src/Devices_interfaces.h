@@ -16,5 +16,9 @@
 #include "Hardware/Interface_Gpio.cpp"
 #include "Hardware/Interface_Pwm.cpp"
 #include "Hardware/Interface_Adc.cpp"
+#include "Hardware/Interface_Current_Acs781.cpp"
+#include "Hardware/Interface_Voltage_Refrence.cpp"
+#include "Hardware/Interface_Temp_Lm62.cpp"
+#include "Hardware/Interface_Power_Line.cpp"
 
 #endif /* ifndef DEVICES_INTERFACES */
