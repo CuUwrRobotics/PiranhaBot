@@ -90,7 +90,7 @@ virtual uint8_t getDeviceTypeId() = 0;
  * @return Pin value of the given pin
  */
 
-virtual uint16_t getPinValue(uint8_t pin, DataType dataType) = 0;
+virtual float getPinValue(uint8_t pin, DataType dataType) = 0;
 
 /**
  * Used to set the value of a pin
@@ -98,7 +98,7 @@ virtual uint16_t getPinValue(uint8_t pin, DataType dataType) = 0;
  * @return If settign was successful.
  */
 
-virtual bool setPinValue(uint8_t pin, uint16_t *data, DataType dataType,
+virtual bool setPinValue(uint8_t pin, float *data, DataType dataType,
                          uint8_t interfaceId) = 0;
 
 /**
@@ -154,6 +154,12 @@ bool attachInterface(PinBus pinBus, uint8_t interfaceId) {
 		       getHardwareName());
 		return false;
 	}
+	if (pinBus.getBusType() != currentPinBus.getBusType()) {
+		printf("%s DEVICE attachInterface request got bad bus type!\n",
+		       getHardwareName());
+		return false;
+	}
+
 	// Pins are all within range and available, so assign control
 	// For each pin:
 	// -> assign pins

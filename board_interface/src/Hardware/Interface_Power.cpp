@@ -70,10 +70,11 @@ void setDefaultModes(){
  * @return TODO
  */
 
-uint16_t readPin(uint8_t pin, DataType dataType) {
+float *readPin(uint8_t pin, DataType dataType) {
 	if (dataType == PACKET_GPIO_STATE) {
-		return commDevice->getPinValue(pinBus.getPin(pin),
-		                               PACKET_GPIO_STATE);
+		static float data[1];
+		data[0] = commDevice->getPinValue(pinBus.getPin(pin), PACKET_GPIO_STATE);
+		return data;
 	} else {
 		ROS_ERROR("readPin: Recieved invalid dataType: %d\n", dataType);
 		return 0;
@@ -88,7 +89,7 @@ uint16_t readPin(uint8_t pin, DataType dataType) {
  * @param hd The full hardware descriptor.
  * @return 1 if there are no errors.
  */
-uint8_t writePin(uint8_t pinNumber, uint16_t *data, DataType dataType,
+uint8_t writePin(uint8_t pinNumber, float *data, DataType dataType,
                  uint64_t hd){
 	// Check that HD matches
 	if (hd != getHardwareDescriptor(pinNumber)) {
@@ -108,7 +109,7 @@ uint8_t writePin(uint8_t pinNumber, uint16_t *data, DataType dataType,
 	 * connect to. Data must be formatted and then sent off to the parent device.
 	 * This codes is an example which may work for PWM (untested).
 	 */
-	uint16_t dataForDevice;
+	float dataForDevice;
 	DataType dataTypeForDevice;
 	if (dataType == PACKET_GPIO_STATE) {
 		dataTypeForDevice = PACKET_GPIO_STATE;

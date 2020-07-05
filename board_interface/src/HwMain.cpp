@@ -77,6 +77,16 @@ void createAndInitDevices(){
 	devices[i]->init(i, DEVICE_ADDRESS + i, BUS_PWM);
 	i++;
 
+	// ADC 0
+	devices[i] = new Device_Adc_Mcp3008();
+	devices[i]->init(i, DEVICE_ADDRESS + i, BUS_ADC);
+	i++;
+
+	// ADC 1
+	devices[i] = new Device_Adc_Mcp3008();
+	devices[i]->init(i, DEVICE_ADDRESS + i, BUS_ADC);
+	i++;
+
 	// variable value must be changed if this is true
 	if (i != TOTAL_DEVICES) {
 		ROS_ERROR(
@@ -172,6 +182,28 @@ void createAndInitInterfaces(){
 	pinBus.resetAll();
 	i++;
 
+	// ADC 0 (Device index 5)
+	// ***************************************************************************
+	busType = BUS_ADC;
+	d++;
+	// PWM interface: 16 pins
+	pinBus.createUniformPinBusFromSet(busType, 0, 7, MODE_INPUT);
+	interfaces[i] = new Interface_Adc();
+	interfaces[i]->start(devices[d], pinBus, i);
+	pinBus.resetAll();
+	i++;
+
+	// ADC 1 (Device index 6)
+	// ***************************************************************************
+	busType = BUS_ADC;
+	d++;
+	// PWM interface: 16 pins
+	pinBus.createUniformPinBusFromSet(busType, 0, 7, MODE_INPUT);
+	interfaces[i] = new Interface_Adc();
+	interfaces[i]->start(devices[d], pinBus, i);
+	pinBus.resetAll();
+	i++;
+
 	// variable value must be changed if this is true
 	if (i != TOTAL_INTERFACES) {
 		ROS_ERROR(
@@ -216,6 +248,11 @@ void runBitTest(){
 	// ================
 	if (!testLeakLed(interfaces[5], devices[2])) testsOk = false;
 
+	// ADC testing
+	// ================
+	if (!testAdc(interfaces[8], devices[5])) testsOk = false;
+	if (!testAdc(interfaces[9], devices[6])) testsOk = false;
+
 	// All tests done
 	if (!testsOk) {
 		printf(
@@ -225,6 +262,71 @@ void runBitTest(){
 		printf("%sAll BIT tests good :)%s\n", GREEN, NO_COLOR);
 	}
 } // runBitTest
+
+/**
+ *
+ */
+
+void calibrateAdc() {
+	const float actualDiodeVoltage = 3; // This should be measured for accuracy
+	const float actualDiodeTolerance = .06; // 2%
+	const float adcTolerance = .01; // (5v/2^9) for a 10-bit ADC after removing LSB
+	const float worstTolerance = adcTolerance + actualDiodeTolerance;
+	float diodeVoltage = 3.1; // remove this
+	float offsetRatio;
+	float avccTheoretical = 5; // Should be 5v, but it won't be
+	float toleranceRatio; // Multiply by a voltage to get tolerance of estimate.
+	float toleranceAtAvcc;
+	float avccActual;
+	// GETS VALUES HERE
+	printf("\n%sCalibrate ADC calibration values:%s\n", YELLOW,
+	       NO_COLOR);
+	printf("\tActual diode voltage\t  = %s%5.2f%sV\t±%s%.2f%sV\n",
+	       WHITE, actualDiodeVoltage, NO_COLOR,
+	       WHITE, actualDiodeTolerance, NO_COLOR);
+	printf("\tMeasured diode voltage\t  = %s%5.2f%sV\t±%s%.2f%sV\n",
+	       WHITE, diodeVoltage, NO_COLOR,
+	       WHITE, adcTolerance, NO_COLOR);
+	offsetRatio = actualDiodeVoltage / diodeVoltage;
+	avccActual = offsetRatio * 5;
+	// Gets a tolerance ratio; multiply by the voltage to get tolerance.
+	toleranceRatio = ((actualDiodeTolerance / actualDiodeVoltage) +
+	                  (adcTolerance / diodeVoltage));
+	toleranceAtAvcc = toleranceRatio * avccActual;
+	printf("\tOffset ratio          \t  = %s%5.2f%s\n",
+	       WHITE, offsetRatio, NO_COLOR);
+	printf("\t%sAt measured %s5.00%sV, actual = %s%5.2f%sV\t±%s%.2f%sV\n",
+	       NO_COLOR, // Text color
+	       WHITE, NO_COLOR, // '5.00' color
+	       WHITE, avccActual, NO_COLOR,
+	       WHITE, toleranceAtAvcc, NO_COLOR);
+	// Pack data into any device which identifies as an ADC.
+	uint64_t hd;
+	float data[2] = {offsetRatio, toleranceRatio};
+	for (uint8_t intf = 0; intf < TOTAL_INTERFACES; intf++) {
+		if (interfaces[intf]->getInterfaceTypeId() ==
+		    HardwareDescriptor::DEVICE_ADC) {
+			hd = interfaces[intf]->getHardwareDescriptor(0);
+			interfaces[intf]->writePin(0, data,
+			                           PACKET_ADC_AVCC_OFFSET_AND_TOLERANCE_RATIOS,
+			                           hd);
+		}
+	}
+	printf("\tData has been stored in ADCs.\n");
+
+	// printf("ADC DUMP: ADC 0\n");
+	// float *voltagesIn;
+	// // float *data;
+	// for (int pin = 0; pin < interfaces[8]->getPinCount(); pin++) {
+	// 	printf("Pin %d:\t%s%.0f%s", pin, WHITE,
+	// 	       *interfaces[8]->readPin(pin, PACKET_ADC_DIRECT_10BIT), NO_COLOR);
+	// 	voltagesIn = interfaces[8]->readPin(pin, PACKET_ADC_VOLTAGE_WITH_TOLERANCE);
+	// 	printf("\t%s%.2f%sV\t±%s%.2f%sV\n",
+	// 	       WHITE, voltagesIn[0], NO_COLOR,
+	// 	       WHITE, voltagesIn[1], NO_COLOR);
+	// }
+	// printf("\n");
+} // dumpAdc
 
 /**
  * @return TODO
@@ -237,5 +339,19 @@ int main(){
 		devices[i]->updateData();
 	// All set; dump data
 	dumpConfiguration(true, interfaces, devices); // False for full pin listing
+	calibrateAdc(); // Calibrate the ADCs based on the known real AVCC value.
 	runBitTest(); // Test interfaces
+
+	printf("ADC DUMP: ADC 0\n");
+	float *voltagesIn;
+	// float *data;
+	for (int pin = 0; pin < interfaces[8]->getPinCount(); pin++) {
+		printf("Pin %d:\t%s%.0f%s", pin, WHITE,
+		       *interfaces[8]->readPin(pin, PACKET_ADC_DIRECT_10BIT), NO_COLOR);
+		voltagesIn = interfaces[8]->readPin(pin, PACKET_ADC_VOLTAGE_WITH_TOLERANCE);
+		printf("\t%s%.2f%sV\t±%s%.2f%sV\n",
+		       WHITE, voltagesIn[0], NO_COLOR,
+		       WHITE, voltagesIn[1], NO_COLOR);
+	}
+	printf("\n");
 } // main

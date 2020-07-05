@@ -181,6 +181,15 @@ bool PinBus::setBusType(BusType type) {
  * @return TODO
  */
 
+inline BusType PinBus::getBusType() {
+	return busType;
+} // getBusType
+
+/**
+ * @param type TODO
+ * @return TODO
+ */
+
 bool PinBus::setPinCount(uint8_t count) {
 	if (pinCount != MAX_PINS + 1) {
 		ROS_ERROR("PinBus::setPinCount: Pin count already assigned!\n");

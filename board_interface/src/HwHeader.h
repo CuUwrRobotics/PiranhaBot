@@ -8,8 +8,8 @@ using namespace std;
 #include "HardwareDescriptor.cpp"
 #include <ros/ros.h>
 
-const static uint8_t TOTAL_INTERFACES = 8;
-const static uint8_t TOTAL_DEVICES = 5;
+const static uint8_t TOTAL_INTERFACES		= 10;
+const static uint8_t TOTAL_DEVICES			= 7;
 
 const uint8_t MAX_PIN_COUNT							= 16;
 
@@ -17,13 +17,23 @@ const uint8_t MAX_PIN_COUNT							= 16;
 const uint8_t COMM_TYPE_I2C							= 0x20;
 const uint8_t COMM_TYPE_SPI							= 0x21;
 
-// Data packet types for ROS data transfers. (This just says what the values
-// passed are supposed to mean, ie, packets.)
+// Data packet types for ROS data transfers. Some have multiple peices of data
+// stored in an array. Some are intended for settigns, not for directly
+// writing/redaing data.
 enum DataType {PACKET_INVALID,
+	             // PWM data tyeps
 	             PACKET_PWM_DUTY_100,
 	             PACKET_PWM_ON_TICKS,
-	             PACKET_PWM_FREQ,
-	             PACKET_GPIO_STATE};
+	             PACKET_PWM_FREQ, // frequency setting
+	             // Only one for GPIO
+	             PACKET_GPIO_STATE,
+	             // Some ADC types are settings for calibration
+	             PACKET_ADC_DIRECT_10BIT, // 10-bit range, direct from the ADC
+	             PACKET_ADC_VOLTAGE,
+	             // TWO VALUES! [0] = actual voltage; [1] = tolerance in volts
+	             PACKET_ADC_VOLTAGE_WITH_TOLERANCE,
+	             // TWO VALUES! [0] * measured = actual voltage; [1] * actual = tolerance
+	             PACKET_ADC_AVCC_OFFSET_AND_TOLERANCE_RATIOS};
 
 // For colorful console output
 char D_GRAY[10] = "\033[1;30m";

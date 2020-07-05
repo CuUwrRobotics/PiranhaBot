@@ -15,6 +15,8 @@ public:
 
 bool setBusType(BusType type);
 
+BusType getBusType();
+
 bool setPinCount(uint8_t count);
 
 inline bool setPin(uint8_t pin, PinMode mode);
@@ -95,6 +97,12 @@ PinMode pinModes[MAX_PINS] = {MODE_INVALID};
 uint8_t pinCount = MAX_PINS + 1;
 BusType busType = BUS_INVALID;
 }; // class PinBus
+
+// class PinBus
+
+// class PinBus
+
+// class PinBus
 
 // class PinBus
 

@@ -1,6 +1,3 @@
-/* This class is a tempalte for copy/pasting to actual class files. It is
- * intened tospeed up making new devices.
- */
 // Generic headers
 #include "HwHeader.h"
 #include "Devices_interfaces.h"
@@ -9,10 +6,6 @@
 // Header file custom to this specific chip
 // #include "Device_Gpio_Mcp23017.h"
 
-/**
- * Template device subclass for creating any new devices.
- * @author
- */
 class Device_Pwm_Pca9685 : public Device {
 private:
 // THESE VALUES MUST BE REVIEWED ON CREATION OF EACH NEW DEVICE SUBCLASS
@@ -30,7 +23,6 @@ const static uint8_t COMM_TYPE = COMM_TYPE_I2C;
 // ===============================.
 const static uint8_t PIN_COUNT = 16;
 const static uint8_t deviceTypeId = HardwareDescriptor::DEVICE_PWM;
-const static uint8_t readableData = false; // If this chip can read data
 
 // Pin Modes That This Chip can Accept
 // ==============================================
@@ -41,11 +33,11 @@ const PinMode validPinModes[VALID_PIN_MODE_COUNT] = {MODE_OUTPUT};
 // ====================================
 uint8_t reservedPins[PIN_COUNT];
 // For storing tick rate (duty cycle)
-uint16_t currentPinTicks[PIN_COUNT];
-uint16_t requestedPinTicks[PIN_COUNT];
+float currentPinTicks[PIN_COUNT];
+float requestedPinTicks[PIN_COUNT];
 // For storing device frequncy
-uint16_t currentFrequencyValue;
-uint16_t requestedFrequencyValue;
+float currentFrequencyValue;
+float requestedFrequencyValue;
 
 /* These give the base Device class access to the above local variables. They
  * don't need any modification. See more info about each function in the Device
@@ -116,7 +108,7 @@ bool deviceInit(){
 public:
 
 // Simple retuning function which needs no modification.
-inline uint16_t getPinValue(uint8_t pin, DataType dataType){
+inline float getPinValue(uint8_t pin, DataType dataType){
 	if (dataType == PACKET_PWM_FREQ)
 		return currentFrequencyValue;
 	if (dataType == PACKET_PWM_ON_TICKS)
@@ -134,7 +126,7 @@ inline uint16_t getPinValue(uint8_t pin, DataType dataType){
  * @return TODO
  */
 
-bool setPinValue(uint8_t pin, uint16_t *data, DataType dataType,
+bool setPinValue(uint8_t pin, float *data, DataType dataType,
                  uint8_t interfaceId) {
 	if (getReservedPins(pin) != interfaceId) {
 		ROS_ERROR(
@@ -191,18 +183,18 @@ bool updateData(){
 	}
 	// Check if any data is readable on any pins. If so, read it.
 	if (readableDataAvailable()) {
-		printf("Reading data from pins (TODO).\n");
-		// READ DATA HERE
-		for (uint8_t pin = 0; pin < PIN_COUNT; pin++) {
-			if (pinIsReadable(pin)) { // If pin should be read
-				currentPinTicks[pin] = 0; // Just set to zero
-			}
-		}
+		// printf("Reading data from pins (TODO).\n");
+		// // READ DATA HERE
+		// for (uint8_t pin = 0; pin < PIN_COUNT; pin++) {
+		// 	if (pinIsReadable(pin)) { // If pin should be read
+		// 		currentPinTicks[pin] = 0; // Just set to zero
+		// 	}
+		// }
 	}
 	// Check if any data needs to be written. If so, write it.
 	if (writeDataPending) {
 		printf("Writing data to pins (TODO). %d\n", requestedFrequencyValue);
-		uint16_t pinValuesToSend[PIN_COUNT] = {0};
+		float pinValuesToSend[PIN_COUNT] = {0};
 		// For each pin, check if pin is in read mode. if not, write the value over.
 		for (uint8_t pin = 0; pin < PIN_COUNT; pin++) { // For each pin
 			// if (pinIsReadable(pin)) {

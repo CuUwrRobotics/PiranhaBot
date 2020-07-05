@@ -30,7 +30,6 @@ const static uint8_t COMM_TYPE = COMM_TYPE_I2C;
 // ===============================.
 const static uint8_t PIN_COUNT = 16;
 const static uint8_t deviceTypeId = HardwareDescriptor::DEVICE_GPIO;
-const static uint8_t readableData = true; // If this chip can read data
 
 // Pin Modes That This Chip can Accept
 // ==============================================
@@ -119,10 +118,11 @@ public:
  * @return TODO
  */
 
-inline uint16_t getPinValue(uint8_t pin, DataType dataType){
+inline float getPinValue(uint8_t pin, DataType dataType){
 	if (dataType == PACKET_GPIO_STATE) {
-		// printf("reading: 0x%4x", currentPinValues);
-		return (currentPinValues >> pin) & 0x0001; // Only need 1 bit.
+		// Gets bit and returns a numebr. Cannot bitshift a float, so this is close enough.
+		return ((uint16_t)((currentPinValues >> pin) & 0x01) != (uint16_t)0) ?
+		       1 : 0;
 	}
 	ROS_ERROR("getPinValue for device index %d got bad dataType %d for pin %d.",
 	          dataType, pin);
@@ -136,7 +136,7 @@ inline uint16_t getPinValue(uint8_t pin, DataType dataType){
  * @return TODO
  */
 
-bool setPinValue(uint8_t pin, uint16_t *data, DataType dataType, uint8_t
+bool setPinValue(uint8_t pin, float *data, DataType dataType, uint8_t
                  interfaceId) {
 	if (getReservedPins(pin) != interfaceId) {
 		ROS_ERROR(
@@ -210,7 +210,7 @@ bool updateData(){
 		// for (uint8_t pin = 0; pin < PIN_COUNT; pin++) {
 		// }
 		// No values for this interface
-		// uint16_t pinValuesToSend[PIN_COUNT] = {0};
+		// float pinValuesToSend[PIN_COUNT] = {0};
 		// // For each pin, check if pin is in read mode. if not, write the value over.
 		// for (uint8_t pin = 0; pin < PIN_COUNT; pin++) { // For each pin
 		// 	if (pinIsReadable(pin)) {

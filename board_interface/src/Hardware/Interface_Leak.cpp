@@ -70,31 +70,33 @@ void setDefaultModes(){
  * @return TODO
  */
 
-uint16_t readPin(uint8_t pin, DataType dataType) {
+float *readPin(uint8_t pin, DataType dataType) {
 	if (dataType == PACKET_GPIO_STATE) {
-		return commDevice->getPinValue(pinBus.getPin(pin),
-		                               PACKET_GPIO_STATE);
+		static float data[1];
+		data[0] = commDevice->getPinValue(pinBus.getPin(pin),
+		                                  PACKET_GPIO_STATE);
+		return data;
 	} else {
 		ROS_ERROR("readPin: Recieved invalid dataType: %d\n", dataType);
 		return 0;
 	}
 } // readPin
 
-/**
- * writePin interprets a value to be assigned to a pin, then tells the parent
- * device commDevice to setPinValue using the commDevice's data conventions.
- * TODO: enumerate errors better
- * @param pinNumber The pin nunmber to try to drive
- * @param hd The full hardware descriptor.
- * @return 1 if there are no errors.
- */
-uint8_t writePin(uint8_t pinNumber, uint16_t *data, DataType dataType,
+// **** THESE OVERRIDE OVER PARENT CLASS ****
+
+uint8_t writePin(uint8_t pinNumber, float *data, DataType dataType,
                  uint64_t hd){
 	ROS_INFO("writePin: Data cannot be written to the LEAK interface!");
 	return 0;
 } /* writePin */
 
-// **** OVERRIDE OVER PARENT CLASS ****
+/**
+ * @param pinNumber TODO
+ * @param pinMode TODO
+ * @param hd TODO
+ * @return TODO
+ */
+
 uint8_t setPinMode(uint8_t pinNumber, PinMode pinMode, uint64_t hd){
 	ROS_INFO("setPinMode: Data cannot be written to the LEAK interface!");
 	return 0;

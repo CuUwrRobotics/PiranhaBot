@@ -16,8 +16,8 @@
 bool testPwm(Interface *intf, Device *dev, bool direction) {
 	bool returnVal = true;
 	uint64_t hd;
-	uint16_t frequency;
-	uint16_t data;
+	float frequency;
+	float data;
 
 	printf("%s", YELLOW);
 	for (int i = 0; i < 80; i++)
@@ -60,7 +60,7 @@ bool testPwm(Interface *intf, Device *dev, bool direction) {
 	dev->updateData(); // Push data out to the chip
 	printf("Results:\n========\n");
 	// All pins should have same freq
-	frequency = intf->readPin(0, PACKET_PWM_FREQ);
+	frequency = *intf->readPin(0, PACKET_PWM_FREQ);
 	printf("Frequency: ");
 	if (frequency != 3500) {
 		returnVal = false;
@@ -71,7 +71,7 @@ bool testPwm(Interface *intf, Device *dev, bool direction) {
 	printf("%d%s\n", frequency, NO_COLOR);
 	bool dataGood = false;
 	for (int pin = 0; pin < intf->getPinCount(); pin++) {
-		data = intf->readPin(pin, PACKET_PWM_ON_TICKS);
+		data = *intf->readPin(pin, PACKET_PWM_ON_TICKS);
 		if (direction) {
 			// data = 4095 - data;
 			dataGood = (data == 4095 - (256 * pin));
@@ -109,8 +109,8 @@ bool testPwm(Interface *intf, Device *dev, bool direction) {
 bool testGpio(Interface *intf, Device *dev) {
 	bool returnVal = true;
 	uint64_t hd;
-	uint16_t data;
-	uint16_t correctData;
+	float data;
+	float correctData;
 	bool dataGood;
 
 	printf("%s", YELLOW);
@@ -132,7 +132,7 @@ bool testGpio(Interface *intf, Device *dev) {
 		"Pin Modes Test (setPinValue errors are normal and part of the test)\n");
 	printf("Results:\n========\n");
 	dataGood = true;
-	uint16_t previousData;
+	float previousData;
 	// Pin 0 mode OUT
 	hd = intf->getHardwareDescriptor(0);
 	intf->setPinMode(0, MODE_OUTPUT, hd);
@@ -146,12 +146,12 @@ bool testGpio(Interface *intf, Device *dev) {
 	data = 1; // Set one pin per cycle to HIGH
 	intf->writePin(0, &data, PACKET_GPIO_STATE, hd);
 	dev->updateData();
-	if (intf->readPin(0, PACKET_GPIO_STATE) != 1) // Check pin data
+	if (*intf->readPin(0, PACKET_GPIO_STATE) != 1) // Check pin data
 		dataGood = false;
 	data = 0; // Set one pin per cycle to HIGH
 	intf->writePin(0, &data, PACKET_GPIO_STATE, hd);
 	dev->updateData();
-	if (intf->readPin(0, PACKET_GPIO_STATE) != 0) // Check pin data
+	if (*intf->readPin(0, PACKET_GPIO_STATE) != 0) // Check pin data
 		dataGood = false;
 	if (dataGood == false) {
 		printf(
@@ -172,18 +172,18 @@ bool testGpio(Interface *intf, Device *dev) {
 	}
 	// Set pin 1 high/low, make sure it does not change
 	// Pin 1 on
-	previousData = intf->readPin(0, PACKET_GPIO_STATE);
+	previousData = *intf->readPin(0, PACKET_GPIO_STATE);
 	data = 1; // Set one pin per cycle to HIGH
 	intf->writePin(1, &data, PACKET_GPIO_STATE, hd);
 	dev->updateData();
-	if (intf->readPin(1, PACKET_GPIO_STATE) != previousData) // If data changed
+	if (*intf->readPin(1, PACKET_GPIO_STATE) != previousData) // If data changed
 		dataGood = false;
 	// Pin 1 off
-	previousData = intf->readPin(0, PACKET_GPIO_STATE);
+	previousData = *intf->readPin(0, PACKET_GPIO_STATE);
 	data = 0; // Set one pin per cycle to HIGH
 	intf->writePin(1, &data, PACKET_GPIO_STATE, hd);
 	dev->updateData();
-	if (intf->readPin(1, PACKET_GPIO_STATE) != previousData) // If data changed
+	if (*intf->readPin(1, PACKET_GPIO_STATE) != previousData) // If data changed
 		dataGood = false;
 	if (dataGood == false) {
 		printf(
@@ -198,12 +198,12 @@ bool testGpio(Interface *intf, Device *dev) {
 	data = 1; // Set one pin per cycle to HIGH
 	intf->writePin(0, &data, PACKET_GPIO_STATE, hd);
 	dev->updateData();
-	if (intf->readPin(0, PACKET_GPIO_STATE) != 1) // Check pin data
+	if (*intf->readPin(0, PACKET_GPIO_STATE) != 1) // Check pin data
 		dataGood = false;
 	data = 0; // Set one pin per cycle to HIGH
 	intf->writePin(0, &data, PACKET_GPIO_STATE, hd);
 	dev->updateData();
-	if (intf->readPin(0, PACKET_GPIO_STATE) != 0) // Check pin data
+	if (*intf->readPin(0, PACKET_GPIO_STATE) != 0) // Check pin data
 		dataGood = false;
 	if (dataGood == false) {
 		printf(
@@ -240,7 +240,7 @@ bool testGpio(Interface *intf, Device *dev) {
 			dev->updateData(); // Push data out to the chip
 			printf("\tCycle %d Pins:\t|", cycle);
 			for (int pin = 0; pin < intf->getPinCount(); pin++) { // Check pins
-				data = intf->readPin(pin, PACKET_GPIO_STATE); // Get actual pin data
+				data = *intf->readPin(pin, PACKET_GPIO_STATE); // Get actual pin data
 				correctData = ((pin == cycle) == highLow); // Get the intended data
 				if (data == correctData) // Check pin data
 					dataGood = true;
@@ -270,7 +270,7 @@ bool testGpio(Interface *intf, Device *dev) {
 		dev->updateData(); // Push data out to the chip
 		printf("\tPins:\t\t|");
 		for (int pin = 0; pin < intf->getPinCount(); pin++) { // Check pins
-			data = intf->readPin(pin, PACKET_GPIO_STATE); // Get actual pin data
+			data = *intf->readPin(pin, PACKET_GPIO_STATE); // Get actual pin data
 			correctData = ((pin % 2) == highLow); // Get the intended data
 			if (data == correctData) // Check pin data
 				dataGood = true;
@@ -315,8 +315,8 @@ bool testGpio(Interface *intf, Device *dev) {
 bool testPower(Interface *intf, Device *dev) {
 	bool returnVal = true;
 	uint64_t hd;
-	uint16_t data;
-	uint16_t correctData;
+	float data;
+	float correctData;
 	bool dataGood;
 
 	printf("%s", YELLOW);
@@ -365,7 +365,7 @@ bool testPower(Interface *intf, Device *dev) {
 			dev->updateData(); // Push data out to the chip
 			printf("\tCycle %d Pins:\t|", cycle);
 			for (int pin = 0; pin < intf->getPinCount(); pin++) { // Check pins
-				data = intf->readPin(pin, PACKET_GPIO_STATE); // Get actual pin data
+				data = *intf->readPin(pin, PACKET_GPIO_STATE); // Get actual pin data
 				correctData = ((pin == cycle) == highLow); // Get the intended data
 				if (data == correctData) // Check pin data
 					dataGood = true;
@@ -395,7 +395,7 @@ bool testPower(Interface *intf, Device *dev) {
 		dev->updateData(); // Push data out to the chip
 		printf("\tPins:\t\t|");
 		for (int pin = 0; pin < intf->getPinCount(); pin++) { // Check pins
-			data = intf->readPin(pin, PACKET_GPIO_STATE); // Get actual pin data
+			data = *intf->readPin(pin, PACKET_GPIO_STATE); // Get actual pin data
 			correctData = ((pin % 2) == highLow); // Get the intended data
 			if (data == correctData) // Check pin data
 				dataGood = true;
@@ -436,8 +436,8 @@ bool testPower(Interface *intf, Device *dev) {
 bool testLeak(Interface *intf, Device *dev) {
 	bool returnVal = true;
 	uint64_t hd;
-	uint16_t data;
-	uint16_t correctData;
+	float data;
+	float correctData;
 	bool dataGood;
 	bool hasLeak;
 
@@ -492,7 +492,7 @@ bool testLeak(Interface *intf, Device *dev) {
 	printf("Results:\n========\n");
 	printf("\tPin states:\t|");
 	for (int pin = 0; pin < intf->getPinCount(); pin++) { // Check pins
-		data = intf->readPin(pin, PACKET_GPIO_STATE); // Get actual pin data
+		data = *intf->readPin(pin, PACKET_GPIO_STATE); // Get actual pin data
 		if (data == 0) // Check pin data
 			dataGood = true;
 		else {
@@ -529,7 +529,7 @@ bool testLeak(Interface *intf, Device *dev) {
 bool testEmergencyIo(Interface *intf, Device *dev) {
 	bool returnVal = true;
 	uint64_t hd;
-	uint16_t data;
+	float data;
 
 	printf("%s", YELLOW);
 	for (int i = 0; i < 80; i++)
@@ -564,7 +564,7 @@ bool testEmergencyIo(Interface *intf, Device *dev) {
 bool testLeakLed(Interface *intf, Device *dev) {
 	bool returnVal = true;
 	uint64_t hd;
-	uint16_t data;
+	float data;
 
 	printf("%s", YELLOW);
 	for (int i = 0; i < 80; i++)
@@ -605,7 +605,7 @@ bool testLeakLed(Interface *intf, Device *dev) {
 	data = 1; // Set one pin per cycle to HIGH
 	intf->writePin(0, &data, PACKET_GPIO_STATE, hd);
 	dev->updateData();
-	if (!intf->readPin(0, PACKET_GPIO_STATE)) {
+	if (!(*intf->readPin(0, PACKET_GPIO_STATE))) {
 		printf("%sCould not turn on Leak LED%s\n", RED, NO_COLOR);
 		returnVal = false;
 	} else {
@@ -616,7 +616,7 @@ bool testLeakLed(Interface *intf, Device *dev) {
 	data = 0; // Set one pin per cycle to HIGH
 	intf->writePin(0, &data, PACKET_GPIO_STATE, hd);
 	dev->updateData();
-	if (intf->readPin(0, PACKET_GPIO_STATE)) {
+	if (*intf->readPin(0, PACKET_GPIO_STATE)) {
 		printf("%sCould not turn on Leak LED%s\n", RED, NO_COLOR);
 		returnVal = false;
 	} else {
@@ -627,6 +627,83 @@ bool testLeakLed(Interface *intf, Device *dev) {
 		printf("%sLeak LED test successful.%s\n", GREEN, NO_COLOR);
 	} else {
 		ROS_ERROR("%sLeak LED test failed.%s\n", RED, NO_COLOR);
+	}
+
+	printf("%s", YELLOW);
+	for (int i = 0; i < 80; i++)
+		printf(":");
+	printf("%s\n", NO_COLOR);
+
+	return returnVal;
+} // testLeakLed
+
+/**
+ * @param intf TODO
+ * @param dev TODO
+ * @return TODO
+ */
+
+bool testAdc(Interface *intf, Device *dev) {
+	bool returnVal = true;
+	uint64_t hd;
+	float data;
+	float *calibrationDataIn;
+	float calibrationDataOut[2];
+
+	printf("%s", YELLOW);
+	for (int i = 0; i < 80; i++)
+		printf(":");
+	printf("%s\n", NO_COLOR);
+	printf(
+		"ADC test beginning.\n\tInterface:\t%s%d%s\n\tDevice:\t\t%s%d%s\n",
+		WHITE, intf->getInterfaceIndex(), NO_COLOR,
+		WHITE, dev->getDeviceIndex(), NO_COLOR);
+	if (intf->getParentDeviceIndex() != dev->getDeviceIndex()) {
+		printf("%sFailed test! Interface does not match parent device.%s",
+		       RED, NO_COLOR);
+		return false;
+	}
+
+	// Tests pin mode (should be input)
+	// ***************************************************************************
+	printf("Pin mode test\n");
+	printf("Results:\n========\n");
+	hd = intf->getHardwareDescriptor(0);
+	intf->setPinMode(0, MODE_OUTPUT, hd);
+	dev->updateData();
+	if (intf->getPinMode(0) != MODE_INPUT) {
+		printf(
+			"%sADC interface pin modes were changed from input, which should not be possible.%s\n",
+			RED, NO_COLOR);
+		intf->setPinMode(0, MODE_INPUT, hd); // Fix the mode
+		dev->updateData();
+		returnVal = false; // Return failure for test
+	} else printf("%sPin mode test successful.%s\n", GREEN, NO_COLOR);
+
+	// Tests pin mode (should be input)
+	// ***************************************************************************
+	printf("Checking calibration...\n");
+	printf("Results:\n========\n");
+	// Get ADC calibration values
+	calibrationDataIn = intf->readPin(0,
+	                                  PACKET_ADC_AVCC_OFFSET_AND_TOLERANCE_RATIOS);
+	if (calibrationDataIn[1] == 1) { // If the tolerance is 100%
+		printf(
+			"%sADC Calibration has NOT been assigned. Default values have been assigned.%s\n",
+			RED, NO_COLOR);
+		calibrationDataOut[0] = 1; // Set bad calibration values
+		calibrationDataOut[1] = 1; // makes tolerance = voltage to show no calibration
+		hd = intf->getHardwareDescriptor(0);
+		intf->writePin(0, calibrationDataOut,
+		               PACKET_ADC_AVCC_OFFSET_AND_TOLERANCE_RATIOS, hd); // Fix the mode
+		returnVal = false; // Return failure for test
+	} else printf("%sCalibration offset ratio = %5.2f.%s\n",
+		            GREEN, calibrationDataIn[0], NO_COLOR);
+
+	if (returnVal) {
+		printf("%sADC test successful.%s\n", GREEN, NO_COLOR);
+	} else {
+		ROS_ERROR("ADC test failed.\n");
 	}
 
 	printf("%s", YELLOW);

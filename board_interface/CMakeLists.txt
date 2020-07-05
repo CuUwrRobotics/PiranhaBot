@@ -115,6 +115,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   src
+  src/Hardware
   ${catkin_INCLUDE_DIRS}
 )
 

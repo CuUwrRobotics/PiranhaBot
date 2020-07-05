@@ -34,10 +34,10 @@ uint64_t baseHardwareDescriptor; // Stores all of the data for the hardware desc
 
 // Must be overwritten by subclasses
 // ****************************************************************************
-virtual uint8_t writePin(uint8_t pinNumber, uint16_t *data, DataType dataType,
+virtual uint8_t writePin(uint8_t pinNumber, float *data, DataType dataType,
                          uint64_t hd) = 0;
 
-virtual uint16_t readPin(uint8_t pin, DataType dataType) = 0;
+virtual float *readPin(uint8_t pin, DataType dataType) = 0;
 
 virtual void setDefaultModes() = 0;
 
