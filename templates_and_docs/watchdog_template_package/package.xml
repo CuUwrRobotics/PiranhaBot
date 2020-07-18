@@ -1,0 +1,2 @@
+<!-- Add at least this line to you package.xml to use the watchdog message -->
+<depend>watchdog</depend>

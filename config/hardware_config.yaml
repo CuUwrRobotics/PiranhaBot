@@ -1,0 +1,37 @@
+# GPIO
+# *****************************************************************************
+- device_name:        "MCP23017"  # GPIO 0
+  number:                0        # Number on the board
+  I2C_addr:              0xFF     # Hexadecimal address on I2C bus
+- device_name:        "MCP23017"  # GPIO 1
+  number:                1
+  I2C_addr:              0xFF
+  - device_name:        "MCP23017"  # Not used as GPIO interface, but the same chip
+  number:                2
+  I2C_addr:              0xFF
+
+  # PWM
+  # *****************************************************************************
+- device_name:        "PCA9685"   # PWM 0
+  number:                0
+  I2C_addr:              0xFF
+- device_name:        "PCA9685"   # PWM 1
+  number:                1
+  I2C_addr:              0xFF
+
+# ADC
+# *****************************************************************************
+- device_name:        "MCP3008"   # ADC 0
+  number:                0
+  SPI_cs_pin:            -99      # CS pin for this chip's SPI, based on WiringPi (?)
+- device_name:        "MCP3008"   # ADC 1
+  number:                1
+  SPI_cs_pin:            -99
+- device_name:        "MCP3008"   # Not used as ADC interface, but same chip
+  number:                2
+  SPI_cs_pin:            -99      # Hexadecimal address on I2C bus
+
+# Arduino
+# *****************************************************************************
+- interface_type:        "ARDUINO"
+  I2C_addr:              0xFF # Hexadecimal address on I2C bus

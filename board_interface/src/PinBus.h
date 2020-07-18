@@ -3,97 +3,106 @@
 #include <stdio.h>
 
 enum BusType {BUS_INVALID, BUS_GPIO, BUS_ADC, BUS_PWM, BUS_OTHER};
-enum PinState {STATE_INVALID, STATE_ON, STATE_OFF, STATE_NONE, STATE_VARIABLE};
-enum PinMode {MODE_INVALID, MODE_GPIO_INPUT, MODE_GPIO_INPUT_X,
-	            MODE_GPIO_OUTPUT, MODE_PWM_ON, MODE_PWM_OFF};
+// enum PinState {STATE_INVALID, STATE_ON, STATE_OFF, STATE_NONE, STATE_VARIABLE};
+enum PinMode {MODE_INVALID, MODE_INPUT, MODE_OUTPUT}; // For handling data directions
 
+/**
+ * PinBus
+ * @author
+ */
 class PinBus {
 public:
 
-	bool setBusType(BusType type);
+bool setBusType(BusType type);
 
-	bool setPinCount(uint8_t count);
+BusType getBusType();
 
-	inline bool setPin(uint8_t pin, PinMode mode, PinState state);
+bool setPinCount(uint8_t count);
 
-	bool setPinMode(uint8_t pin, PinMode mode);
+inline bool setPin(uint8_t pin, PinMode mode);
 
-	bool setPinState(uint8_t pin, PinState state);
+bool setPinMode(uint8_t pin, PinMode mode);
 
-	PinMode getPinMode(uint8_t pin);
+// bool setPinState(uint8_t pin, PinState state);
 
-	PinState getPinState(uint8_t pin);
+PinMode getPinMode(uint8_t pin);
 
-	inline bool setPins(const PinMode *modes, const PinState *states);
+// PinState getPinState(uint8_t pin);
 
-	bool setAllPins(PinMode modes, PinState states);
+inline bool setPins(const PinMode *modes);
 
-	bool setPinStates(const PinState *states);
+bool setAllPins(PinMode modes);
 
-	bool setPinModes(const PinMode *modes);
+// bool setPinStates(const PinState *states);
 
-	// Sets a pin value. Can only happen once per pin.
-	bool assignPin(uint8_t index, uint8_t pinNumber);
+bool setPinModes(const PinMode *modes);
 
-	// Sets a pin value. Can only happen once.
-	bool assignPins(uint8_t *pinNumbers, uint8_t pinNumbersLength);
+// Sets a pin value. Can only happen once per pin.
+bool assignPin(uint8_t index, uint8_t pinNumber);
 
-	/* Sets all pin values as a list from startPin to endPin. Can only happen once.
-	 * If not yet assigned, this will set pinCount.
-	 * endPin - startPin = pinCount.
-	 * Ex: endPin = 3, startPin = 8; pin assignments: {3, 4, 5, 6, 7, 8}
-	 */
-	bool assignPinSet(uint8_t startPin, uint8_t endPin);
+// Sets a pin value. Can only happen once.
+bool assignPins(uint8_t *pinNumbers, uint8_t pinNumbersLength);
 
-	// Returns the pin assignment for the pin at index
-	inline uint8_t getPin(uint8_t index);
+/* Sets all pin values as a list from startPin to endPin. Can only happen once.
+ * If not yet assigned, this will set pinCount.
+ * endPin - startPin = pinCount.
+ * Ex: endPin = 3, startPin = 8; pin assignments: {3, 4, 5, 6, 7, 8}
+ */
+bool assignPinSet(uint8_t startPin, uint8_t endPin);
 
-	// Returns full array of pin assignemnts
-	inline uint8_t *getPins();
+// Returns the pin assignment for the pin at index
+inline uint8_t getPin(uint8_t index);
 
-	// Returns full array of pin assignemnts
-	inline uint8_t getPinCount();
+// Returns full array of pin assignemnts
+inline uint8_t *getPins();
 
-	bool createPinBus(BusType busType, uint8_t pinCount);
+// Returns full array of pin assignemnts
+inline uint8_t getPinCount();
 
-	bool createPinBus(BusType busType, uint8_t *pinAssignments, uint8_t
-	                  pinCount,
-	                  const PinMode *pinModes, const PinState *pinStates);
+bool createPinBus(BusType busType, uint8_t pinCount);
 
-	bool createPinBusFromSet(BusType busType, uint8_t start, uint8_t end,
-	                         const PinMode *pinModes,
-	                         const PinState *pinStates);
+bool createPinBus(BusType busType, uint8_t *pinAssignments, uint8_t
+                  pinCount,
+                  const PinMode *pinModes);
 
-	bool createUniformPinBusFromSet(BusType busType, uint8_t start,
-	                                uint8_t end,
-	                                const PinMode pinModes,
-	                                const PinState pinStates);
+bool createPinBusFromSet(BusType busType, uint8_t start, uint8_t end,
+                         const PinMode *pinModes);
 
-	void resetAll();
+bool createUniformPinBusFromSet(BusType busType, uint8_t start,
+                                uint8_t end,
+                                const PinMode pinModes);
 
-	bool busEquals(BusType pinType);
+void resetAll();
 
-	char *getModeString(uint8_t pin, bool colorizeBadOutputs);
+bool busEquals(BusType pinType);
 
-	char *getStateString(uint8_t pin, bool colorizeBadOutputs);
+const char *getModeString(uint8_t pin, bool colorizeBadOutputs);
 
-	char *getBusTypeString(bool colorizeBadOutputs);
+const char *getBusTypeString(bool colorizeBadOutputs);
 
-	void dumpInfo(bool colorful);
+void dumpInfo(bool colorful);
 
 private:
-	// char ERROR_COLOR[10] = "\033[1;31m";
-	// char NO_COLOR[7] = "\033[0m";
+// char ERROR_COLOR[10] = "\033[1;31m";
+// char NO_COLOR[7] = "\033[0m";
 
-	const static uint8_t MAX_PINS = 16;
+const static uint8_t MAX_PINS = 16;
 
-	uint8_t pinAssignments[MAX_PINS] = {0xFF};
-	PinMode pinModes[MAX_PINS] = {MODE_INVALID};
-	PinState pinStates[MAX_PINS] = {STATE_INVALID};
-	// Set up using invalid values so these need to be assigned before starting
-	uint8_t pinCount = MAX_PINS + 1;
-	BusType busType = BUS_INVALID;
-};
+uint8_t pinAssignments[MAX_PINS] = {0xFF};
+PinMode pinModes[MAX_PINS] = {MODE_INVALID};
+// PinState pinStates[MAX_PINS] = {STATE_INVALID};
+// Set up using invalid values so these need to be assigned before starting
+uint8_t pinCount = MAX_PINS + 1;
+BusType busType = BUS_INVALID;
+}; // class PinBus
+
+// class PinBus
+
+// class PinBus
+
+// class PinBus
+
+// class PinBus
 
 // Sketchy
 #include "PinBus.cpp"

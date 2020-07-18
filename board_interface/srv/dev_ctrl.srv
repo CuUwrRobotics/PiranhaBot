@@ -1,0 +1,35 @@
+# Request types
+# *****************************************************************************
+uint8 OPEN_PIN                     = 0x01    # Request to control a pin
+uint8 DRIVE_PIN                    = 0x02    # Drive a pin
+uint8 CLOSE_PIN                    = 0x03    # Release control over a pin
+
+# Error types
+# *****************************************************************************
+uint8 SUCCESS                      = 0xFF    # Nothing wrong! Request has been set.
+# Request errors
+uint8 ERR_PIN_IN_USE               = 0x01    #
+uint8 ERR_REQ_DOES_NOT_MATCH_CFG   = 0x02    # Requst isn't consisten with the interface setups
+# Driving errors
+uint8 ERR_BAD_HD_NUMBER            = 0x03    # Bad HD
+# Errors with given data
+uint8 ERR_CMD_OUT_OF_RANGE         = 0x04    # Data is out of the range allowable.
+uint8 ERR_BAD_DUTY                 = 0x05    # Duty cycle not between 0 and 1
+uint8 ERR_BAD_PERIOD               = 0x06    # Duty cycle period could not be applied
+# Hardware errors
+uint8 ERR_COULD_NOT_FIND_IF        = 0x07    # Could not connect to the interface.
+uint8 ERR_IF_COMM                  = 0x08    # Communication with interface failed.
+# Generic errors
+uint8 ERR_STOPPED                  = 0x09    # Emergency stop stopped the requested interface
+uint8 ERR_GENERAL                  = 0x0A    # Hardware control node is running, but something's wrong
+
+# Data transferred in ROS
+# *****************************************************************************
+uint8 request_type  # Type of request.
+uint8 data_format   # Format for the data array and the data in it.
+uint8[] pin         # Interface pin number of request.
+uint16[] data       # A value to write to a pins.
+uint64[] hd_number  # Unique descriptor allowing a device to use an interface. One per pin.
+---
+uint64 hd           # If request_type = OPEN_PIN, returns Hardware Descriptor
+uint8 error         # Error/success number
