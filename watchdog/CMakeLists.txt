@@ -49,6 +49,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   pet_dog_msg.msg
+  watchdog_status_msg.msg
 #   Message2.msg
 )
 
@@ -135,9 +136,6 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
  add_executable(${PROJECT_NAME}_node src/WdMain.cpp)
  target_link_libraries(${PROJECT_NAME}_node yaml-cpp ${catkin_LIBRARIES})
-
- # add_executable(${PROJECT_NAME}_display_node src/DispMain.cpp)
- # target_link_libraries(${PROJECT_NAME}_display_node ${catkin_LIBRARIES})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

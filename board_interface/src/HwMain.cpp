@@ -546,10 +546,10 @@ int main(int argc, char *argv[]){
 	ros::Duration loop_wait(1);
 	// For storing pets
 	watchdog::pet_dog_msg msg;
+	msg.petterName = nodeName; // Pack data
 	while (ros::ok()) {
 		// Pet the dog
-		msg.petterName = nodeName; // Pack data
-		wd_petter.publish(msg); // Sends the pet over
+		wd_petter.publish(msg);
 		// Wait 1 second
 		loop_wait.sleep();
 	}

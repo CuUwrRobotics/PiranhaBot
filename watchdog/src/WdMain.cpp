@@ -6,7 +6,12 @@ int main(int argc, char *argv[]) {
 	// Get ROS connected first
 	ros::init(argc, argv, "watchdog");
 	ros::NodeHandle n;
-	ros::Subscriber sub = n.subscribe("pet_dog_msg", 1000, callback);
+	// How the watchdog gets pet
+	ros::Subscriber wd_petting_msg = n.subscribe("pet_dog_msg", 1000,
+	                                             petCallback);
+	// How the watchdog outputs it's status
+	wd_status_msg = n.advertise <watchdog::watchdog_status_msg> (
+		"watchdog_status_msg", 0);
 
 	// Get watchdog config from the system environment variables
 	const char *mainConfigFileName = std::getenv("ros_configuration_file");
@@ -121,45 +126,52 @@ void readWatchdogConfig(){
 } // readWatchdogConfig
 
 void stopWatchdog(){
-	// Humanely kill watchdog
+	// Humanely kills watchdog
 	printf("Stopping watchdog.\n");
 	ros::shutdown();
 } // stopWatchdog
 
-void callback(const watchdog::pet_dog_msg &msg) {
+void printFaults() {
+	printf("Total Faults: %d\n", totalFaults);
+} // printFaults
+
+void petCallback(const watchdog::pet_dog_msg &msg) {
 	for (int i = 0; i < nodes.size(); i++) {
 		// reset the counter for this node
 		if (strcmp(nodes.at(i).nodeName.c_str(), msg.petterName.c_str()) == 0) {
 			nodes.at(i).petCounter = 0;
+			if (nodes.at(i).fault)
+				printf("%s%s%s pet the watchdog after expiring.%s\n",
+				       COLOR_WHITE,
+				       nodes.at(i).nodeName.c_str(),
+				       COLOR_L_GREEN, COLOR_NONE);
 			nodes.at(i).fault = false;
 		}
 	}
 	// printf("Counter reset for: %s\n", msg.petterName.c_str());
 } // callback
 
-// bool incrementNodes() {
-// 	for (int i = 0; i < nodes.size(); i++) {
-// 		if (!nodes.at(i).fault) { // Skip nodes that have already faulted
-// 			nodes.at(i).petCounter += 100;
-// 		}
-// 	}
-// } // allNodesOk
-
 bool allNodesOk() {
-	bool nodesOk = true;
+	totalFaults = 0; // reset global fault counter
 	for (int i = 0; i < nodes.size(); i++) {
 		if (!nodes.at(i).fault) { // Skip nodes that have already faulted
 			// Check if there is a fault (time elapsed > max time)
 			nodes.at(i).fault = (nodes.at(i).petCounter > nodes.at(i).timeBeforeExp);
 			// If there's a fault, flag it, otherwise keep incrementing
-			if (nodes.at(i).fault) nodesOk = false;
-			else nodes.at(i).petCounter += TIME_BETWEEN_CHECKS_MS;
-		}
+			if (nodes.at(i).fault) {
+				totalFaults++;
+				printf("%s%s%s watchdog timer has expired!%s\n",
+				       COLOR_WHITE,
+				       nodes.at(i).nodeName.c_str(),
+				       COLOR_L_RED, COLOR_NONE);
+			}	else nodes.at(i).petCounter += TIME_BETWEEN_CHECKS_MS;
+		} else totalFaults++;
 	}
-	return nodesOk;
+	return (totalFaults == 0);
 } // allNodesOk
 
 void runContinuousWatchdog() {
+	watchdog::watchdog_status_msg status;
 	// Make sure ROS is running first
 	if (!ros::ok()) {
 		error_printf("ROS is not ready yet! Waiting for ROS to initialize.");
@@ -168,14 +180,22 @@ void runContinuousWatchdog() {
 	printf("%sStarted watching for messages from nodes.%s\n",
 	       COLOR_GOLD, COLOR_NONE);
 	ros::Duration loop_wait((float)TIME_BETWEEN_CHECKS_MS / 1000); // loops every 100 ms
-
+	printFaults();
 	while (ros::ok()) {
 		ros::spinOnce();
-		// Checks if any nodes are past expiration and adds 100 ms to each node's expiry counter
-		if (!allNodesOk()) { // Check if any nodes are past expiration
-			error_printf("Node has expired!");
-			break;
+
+		allNodesOk(); // Check and increemnt timer on all nodes, while counting totalFaults
+
+		// Publish the watchdog status to the message
+		status.faults = totalFaults;
+		wd_status_msg.publish(status);
+
+		// Print total faults to console if there are changes
+		if (totalFaults != totalPreviousFaults) {
+			totalPreviousFaults = totalFaults;
+			printFaults();
 		}
+
 		loop_wait.sleep(); // Wait the rest of the 100 ms
 	}
 } // runContinuousWatchdog

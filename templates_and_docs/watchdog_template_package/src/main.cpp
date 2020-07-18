@@ -11,20 +11,23 @@ int main(int argc, char const *argv[]) {
 	// Start ROS and get the node instance
 	ros::init(argc, argv, "board_interface");
 	ros::NodeHandle nd;
-	// Get the node name ot send to the watchdog
-	std::string nodeName = ros::this_node::getName();
-	printf("Node name: %s\n", nodeName.c_str());
 	// Set up the message publisher
 	ros::Publisher wd_petter =
 		nd.advertise <watchdog::pet_dog_msg> ("pet_dog_msg", 1000);
+
 	// Allows for a 1 second delay between messages
 	ros::Duration loop_wait(1000);
+	// Get the node name ot send to the watchdog
+	std::string nodeName = ros::this_node::getName();
+	printf("Node name: %s\n", nodeName.c_str());
 	// For storing pets
 	watchdog::pet_dog_msg msg;
+	msg.petterName = nodeName; // Pack data
+
+	// This should happen repeatedly in your code
 	while (ros::ok()) {
 		// Pet the dog
-		msg.petterName = nodeName; // Pack data
-		wd_petter.publish(msg); // Sends the pet over
+		wd_petter.publish(msg);
 		// Wait 1 second
 		loop_wait.sleep();
 	}
