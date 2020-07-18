@@ -37,8 +37,10 @@
 #include "HwHeader.h"
 #include "Devices_interfaces.h"
 #include "PinBus.h"
-#include "PinData.h"
+
 #include "BitTesting.h"
+
+#include "watchdog/pet_dog_msg.h"
 
 #define DEVICE_ADDRESS 0x55
 
@@ -458,11 +460,16 @@ void startupConfig(){
 		devices[i]->updateData();
 } // startupContig
 
+void hardwareExit() {
+	ros::shutdown();
+} // hardwareExit
+
 /**
  * @return TODO
  */
 
-int main(){
+int main(int argc, char *argv[]){
+	atexit(hardwareExit);
 	createAndInitDevices(); // Setup Devices
 	createAndInitInterfaces(); // Setup Interfaces
 	// YAML CONFIG GOES HERE
@@ -470,56 +477,80 @@ int main(){
 	dumpConfiguration(true, interfaces, devices); // False for full pin listing
 	startupConfig();
 	runBitTest(); // Test interfaces
+	if (false) {
+		float *currentIn;
+		printf("CURRENT DUMP: CURRENT 0\n");
+		printf("\tPin %d:\t%s%.0f%s", 0, WHITE,
+		       *interfaces[10]->readPin(0, PACKET_ADC_DIRECT), NO_COLOR);
+		currentIn = interfaces[10]->readPin(0, PACKET_CURRENT_AMPS_WITH_TOLERANCE);
+		printf("\t%s%.2f%sA\t±%s%.2f%sA\n",
+		       WHITE, currentIn[0], NO_COLOR,
+		       WHITE, currentIn[1], NO_COLOR);
 
-	float *currentIn;
-	printf("CURRENT DUMP: CURRENT 0\n");
-	printf("\tPin %d:\t%s%.0f%s", 0, WHITE,
-	       *interfaces[10]->readPin(0, PACKET_ADC_DIRECT), NO_COLOR);
-	currentIn = interfaces[10]->readPin(0, PACKET_CURRENT_AMPS_WITH_TOLERANCE);
-	printf("\t%s%.2f%sA\t±%s%.2f%sA\n",
-	       WHITE, currentIn[0], NO_COLOR,
-	       WHITE, currentIn[1], NO_COLOR);
+		printf("CURRENT DUMP: CURRENT 1\n");
+		printf("\tPin %d:\t%s%.0f%s", 0, WHITE,
+		       *interfaces[11]->readPin(0, PACKET_ADC_DIRECT), NO_COLOR);
+		currentIn = interfaces[11]->readPin(0, PACKET_CURRENT_AMPS_WITH_TOLERANCE);
+		printf("\t%s%.2f%sA\t±%s%.2f%sA\n",
+		       WHITE, currentIn[0], NO_COLOR,
+		       WHITE, currentIn[1], NO_COLOR);
 
-	printf("CURRENT DUMP: CURRENT 1\n");
-	printf("\tPin %d:\t%s%.0f%s", 0, WHITE,
-	       *interfaces[11]->readPin(0, PACKET_ADC_DIRECT), NO_COLOR);
-	currentIn = interfaces[11]->readPin(0, PACKET_CURRENT_AMPS_WITH_TOLERANCE);
-	printf("\t%s%.2f%sA\t±%s%.2f%sA\n",
-	       WHITE, currentIn[0], NO_COLOR,
-	       WHITE, currentIn[1], NO_COLOR);
+		printf("TEMP DUMP: TEMP 0\n");
+		printf("\tPin %d:\t%s%.0f%s\t%s%.2f%sV", 0,
+		       WHITE, *interfaces[13]->readPin(0, PACKET_ADC_DIRECT), NO_COLOR,
+		       WHITE, *interfaces[13]->readPin(0, PACKET_ADC_VOLTAGE), NO_COLOR);
+		currentIn = interfaces[13]->readPin(0, PACKET_TEMP_C_WITH_TOLERANCE);
+		printf("\t%s%5.2f%s'C\t±%s%.2f%s'C\n",
+		       WHITE, currentIn[0], NO_COLOR,
+		       WHITE, currentIn[1], NO_COLOR);
 
-	printf("TEMP DUMP: TEMP 0\n");
-	printf("\tPin %d:\t%s%.0f%s\t%s%.2f%sV", 0,
-	       WHITE, *interfaces[13]->readPin(0, PACKET_ADC_DIRECT), NO_COLOR,
-	       WHITE, *interfaces[13]->readPin(0, PACKET_ADC_VOLTAGE), NO_COLOR);
-	currentIn = interfaces[13]->readPin(0, PACKET_TEMP_C_WITH_TOLERANCE);
-	printf("\t%s%5.2f%s'C\t±%s%.2f%s'C\n",
-	       WHITE, currentIn[0], NO_COLOR,
-	       WHITE, currentIn[1], NO_COLOR);
+		printf("POWER LINE DUMP:\n");
+		for (uint8_t i = 14; i < 18; i++) {
+			currentIn = interfaces[i]->readPin(0, PACKET_ADC_VOLTAGE_WITH_TOLERANCE);
+			printf("\tPL #%s%d%s:\t%s%5.2f%sV\t±%s%5.2f%sV\n",
+			       WHITE, i, NO_COLOR,
+			       WHITE,
+			       currentIn[0],
+			       NO_COLOR,
+			       WHITE,
+			       currentIn[1],
+			       NO_COLOR);
+		}
 
-	printf("POWER LINE DUMP:\n");
-	for (uint8_t i = 14; i < 18; i++) {
-		currentIn = interfaces[i]->readPin(0, PACKET_ADC_VOLTAGE_WITH_TOLERANCE);
-		printf("\tPL #%s%d%s:\t%s%5.2f%sV\t±%s%5.2f%sV\n",
-		       WHITE, i, NO_COLOR,
-		       WHITE,
-		       currentIn[0],
-		       NO_COLOR,
-		       WHITE,
-		       currentIn[1],
-		       NO_COLOR);
+		printf("ADC DUMP: ADC 0\n");
+		float *voltagesIn;
+		// float *data;
+		for (int pin = 0; pin < interfaces[8]->getPinCount(); pin++) {
+			printf("\tPin %d:\t%s%.0f%s", pin, WHITE,
+			       *interfaces[8]->readPin(pin, PACKET_ADC_DIRECT), NO_COLOR);
+			voltagesIn = interfaces[8]->readPin(pin,
+			                                    PACKET_ADC_VOLTAGE_WITH_TOLERANCE);
+			printf("\t%s%.2f%sV\t±%s%.2f%sV\n",
+			       WHITE, voltagesIn[0], NO_COLOR,
+			       WHITE, voltagesIn[1], NO_COLOR);
+		}
+		printf("\n");
 	}
-
-	printf("ADC DUMP: ADC 0\n");
-	float *voltagesIn;
-	// float *data;
-	for (int pin = 0; pin < interfaces[8]->getPinCount(); pin++) {
-		printf("\tPin %d:\t%s%.0f%s", pin, WHITE,
-		       *interfaces[8]->readPin(pin, PACKET_ADC_DIRECT), NO_COLOR);
-		voltagesIn = interfaces[8]->readPin(pin, PACKET_ADC_VOLTAGE_WITH_TOLERANCE);
-		printf("\t%s%.2f%sV\t±%s%.2f%sV\n",
-		       WHITE, voltagesIn[0], NO_COLOR,
-		       WHITE, voltagesIn[1], NO_COLOR);
+	// Connect ROS
+	printf("Starting up ROS.\n");
+	// Start ROS and get the node instance
+	ros::init(argc, argv, "board_interface");
+	ros::NodeHandle nd;
+	// Get the node name ot send to the watchdog
+	std::string nodeName = ros::this_node::getName();
+	printf("Node name: %s\n", nodeName.c_str());
+	// Set up the message publisher
+	ros::Publisher wd_petter =
+		nd.advertise <watchdog::pet_dog_msg> ("pet_dog_msg", 1000);
+	// Allows for a 1 second delay between messages
+	ros::Duration loop_wait(1);
+	// For storing pets
+	watchdog::pet_dog_msg msg;
+	while (ros::ok()) {
+		// Pet the dog
+		msg.petterName = nodeName; // Pack data
+		wd_petter.publish(msg); // Sends the pet over
+		// Wait 1 second
+		loop_wait.sleep();
 	}
-	printf("\n");
 } // main

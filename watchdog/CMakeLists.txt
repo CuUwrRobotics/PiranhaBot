@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(board_interface)
+project(watchdog)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -9,8 +9,7 @@ project(board_interface)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  # std_msgs
-  watchdog
+  genmsg
 )
 
 ## System dependencies are found with CMake's conventions
@@ -47,11 +46,11 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
+add_message_files(
+  FILES
+  pet_dog_msg.msg
 #   Message2.msg
-# )
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -68,10 +67,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
+generate_messages(
 #   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+  # std_msgs  # Or other packages containing msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -103,12 +102,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
- INCLUDE_DIRS src ${catkin_INCLUDE_DIRS}
+ INCLUDE_DIRS src
 #  LIBRARIES board_interface
- CATKIN_DEPENDS
- roscpp
- # std_msgs
- watchdog
+ CATKIN_DEPENDS roscpp
 #  DEPENDS system_lib
 )
 
@@ -120,7 +116,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   src
-  src/Hardware
+  # src/Hardware
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -137,8 +133,11 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
- add_executable(${PROJECT_NAME}_node src/HwMain.cpp)
- target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
+ add_executable(${PROJECT_NAME}_node src/WdMain.cpp)
+ target_link_libraries(${PROJECT_NAME}_node yaml-cpp ${catkin_LIBRARIES})
+
+ # add_executable(${PROJECT_NAME}_display_node src/DispMain.cpp)
+ # target_link_libraries(${PROJECT_NAME}_display_node ${catkin_LIBRARIES})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

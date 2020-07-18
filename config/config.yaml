@@ -1,5 +1,5 @@
 # CAMERAS + DISPLAY
-camera_config_file: "/home/pi/robot_config_files/camera_config.yaml"
+camera_config_file: "/home/pi/ros_config/camera_config.yaml"
 display_mini_viewer_width: 128
 display_use_mini_viewer: true
 display_screenshot_location: ""
@@ -13,4 +13,7 @@ display_width: 640
 display_height: 480
 
 # HARDWARE
-hardware_config_file: "/home/pi/robot_config_files/hardware_config.yaml"
+hardware_config_file: "/home/pi/ros_config/hardware_config.yaml"
+
+# WATCHDOG
+watchdog_config_file: "/home/pi/ros_config/watchdog_config.yaml"

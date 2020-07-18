@@ -169,7 +169,7 @@ static inline uint64_t addPinNumber(uint64_t hd, uint8_t pinNumber) {
  * @return TODO
  */
 
-static char *interfaceIdToCharArray(uint8_t intf){
+const static char *interfaceIdToCharArray(uint8_t intf){
 	switch (intf) {
 	case INTF_INVALID:
 		return "INTF_INVALID";
@@ -230,7 +230,7 @@ static char *interfaceIdToCharArray(uint8_t intf){
  * @return TODO
  */
 
-static char *deviceIdToCharArray(uint8_t dev){
+const static char *deviceIdToCharArray(uint8_t dev){
 	switch (dev) {
 	case DEVICE_INVALID:
 		return "DEVICE_INVALID";

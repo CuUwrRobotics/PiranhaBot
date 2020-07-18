@@ -4,7 +4,6 @@
 // Generic headers
 #include "HwHeader.h"
 #include "Devices_interfaces.h"
-#include "PinData.h"
 
 // Header file custom to this specific chip
 #include "Device_Gpio_Mcp23017.h"

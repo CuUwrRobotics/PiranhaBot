@@ -6,12 +6,12 @@
 - device_name:        "MCP23017"  # GPIO 1
   number:                1
   I2C_addr:              0xFF
+  - device_name:        "MCP23017"  # Not used as GPIO interface, but the same chip
+  number:                2
+  I2C_addr:              0xFF
 
   # PWM
   # *****************************************************************************
-- device_name:        "MCP23017"  # Not used as GPIO interface, but the same chip
-  number:                2
-  I2C_addr:              0xFF
 - device_name:        "PCA9685"   # PWM 0
   number:                0
   I2C_addr:              0xFF

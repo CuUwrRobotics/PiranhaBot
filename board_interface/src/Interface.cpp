@@ -9,7 +9,6 @@
  #include "HwHeader.h"
  #include "Devices_interfaces.h"
  #include "PinBus.h"
- #include "PinData.h"
 
 /**
  * Interface

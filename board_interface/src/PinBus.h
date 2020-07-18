@@ -76,11 +76,9 @@ void resetAll();
 
 bool busEquals(BusType pinType);
 
-char *getModeString(uint8_t pin, bool colorizeBadOutputs);
+const char *getModeString(uint8_t pin, bool colorizeBadOutputs);
 
-// char *getStateString(uint8_t pin, bool colorizeBadOutputs);
-
-char *getBusTypeString(bool colorizeBadOutputs);
+const char *getBusTypeString(bool colorizeBadOutputs);
 
 void dumpInfo(bool colorful);
 

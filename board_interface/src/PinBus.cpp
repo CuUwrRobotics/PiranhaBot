@@ -306,7 +306,7 @@ bool PinBus::busEquals(BusType pinType) {
 
 // char RED[10] = "\033[1;31m";
 // char NO_COLOR[7] = "\033[0m";
-char *PinBus::getModeString(uint8_t pin, bool colorizeBadOutputs) {
+const char *PinBus::getModeString(uint8_t pin, bool colorizeBadOutputs) {
 	switch (pinModes[pin]) {
 	case MODE_INVALID:
 		if (colorizeBadOutputs)
@@ -330,7 +330,7 @@ char *PinBus::getModeString(uint8_t pin, bool colorizeBadOutputs) {
  * @return TODO
  */
 
-char *PinBus::getBusTypeString(bool colorizeBadOutputs){
+const char *PinBus::getBusTypeString(bool colorizeBadOutputs){
 	switch (busType) {
 	case BUS_INVALID:
 		if (colorizeBadOutputs)
