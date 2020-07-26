@@ -1,25 +1,21 @@
-
 // Generic headers
  #include "HwHeader.h"
  #include "AllDevicesInterfaces.h"
 
-// Specific to the device
-// #include "Device_Adc_Mcp3008.h"
-
 /**
- * Interface_Adc
+ * Interface_Voltage_Div
  * @author
  */
-class Interface_Adc : public Interface {
+class Interface_Voltage_Div : public Interface {
 private:
 // SET THESE FOR ANY NEW INTERFACE
 // ****************************************************************************
 // Information for Interacting with Other Code
 // ===========================================
 // Number of pins to be assigned to the parent device. Max = parent device max pins
-const static uint8_t PIN_COUNT = 8;
+const static uint8_t PIN_COUNT = 1;
 // IDs which indicate what this is and what it should be connected to
-const static Interface_t interfaceTypeId = INTF_ADC;
+const static Interface_t interfaceTypeId = INTF_VOLTAGE_DIVIDER;
 const static Device_t parentDeviceTypeId = DEVICE_ADC;
 
 // Calibration ratios, preset to a default offset and a tolerance +- 100%
@@ -28,6 +24,39 @@ float avccOffsetToleranceRatio = 1; // multiply by actual to get ± tolerance va
 // For data conversions
 float adcSteps = 1024; // number of steps the ADC uses to save data (ie reading at AVCC)
 float avccTheoretical = 5.00; // Theoretical AVCC
+
+float highResistor = 1; // Higher voltage resistor in circuit
+float highResistorTolerance = 0.05; // 5% resistor if highResistor is measured, this is 0.
+float lowResistor = 1; // Lower voltage resistor in cicuit
+float lowResistorTolerance = 0.05;
+float voltageMeasured = 0; // Voltage on the power line, after calculating for resistor divider
+float toleranceVolts = 0; // Tolerance on voltageMeasured
+
+/**
+ * @return TODO
+ */
+
+bool calculateValues(){
+	float voltage;
+	DataError_t errorVal;
+	PinValue_t val;
+	// Get the voltage
+	val.fmt = VALUE_ADC_DIRECT; // Set format
+	val.pin = pinBus.getPin(0); // Go from local pin to the device pin
+	val.data = &voltage; // Uses voltage to store data
+	errorVal = commDevice->getPinValue(&val); // Get the data
+	voltage = voltage * (avccTheoretical / adcSteps) * avccOffsetRatio;
+	if (highResistor == 0 || lowResistor == 0) { // No resistors; no calcs needed
+		voltageMeasured = voltage;
+		toleranceVolts = voltage * avccOffsetToleranceRatio;
+		return true;
+	}
+	voltageMeasured = (voltage * (highResistor + lowResistor)) / lowResistor;
+	toleranceVolts = voltageMeasured * (avccOffsetToleranceRatio +
+	                                    lowResistorTolerance +
+	                                    highResistorTolerance); // Tolerance value
+	return true;
+} // calculateValues
 
 public:
 
@@ -98,15 +127,12 @@ DataError_t readPin(PinValue_t *valueIn) {
 	case VALUE_ADC_DIRECT:
 		return errorVal;
 		break;
-	case VALUE_ADC_VOLTAGE:
-		valueIn->data[0] = valueIn->data[0] *
-		                   (avccTheoretical / adcSteps) * avccOffsetRatio;
-		return errorVal;
-		break;
 	case VALUE_ADC_VOLTAGE_WITH_TOLERANCE:
-		valueIn->data[0] = valueIn->data[0] *
-		                   (avccTheoretical / adcSteps) * avccOffsetRatio; // Actual voltage
-		valueIn->data[1] = valueIn->data[0] * avccOffsetToleranceRatio; // Tolerance value
+		if (!calculateValues()) {
+			return ERROR_INTF_N_READY;
+		}
+		valueIn->data[0] = voltageMeasured;
+		valueIn->data[1] = toleranceVolts;
 		return errorVal;
 		break;
 	default:
@@ -126,6 +152,16 @@ DataError_t writeConfig(InterfaceConfig_t *cfg) {
 		cfg->data[1] = avccOffsetToleranceRatio;
 		return ERROR_SUCCESS;
 		break;
+	case ICFG_PL_LOW_RESISTOR_WITH_TOLERANCE:
+		lowResistor = cfg->data[0];
+		lowResistorTolerance = cfg->data[1];
+		return ERROR_SUCCESS;
+		break;
+	case ICFG_PL_HIGH_RESISTOR_WITH_TOLERANCE:
+		highResistor = cfg->data[0];
+		highResistorTolerance = cfg->data[1];
+		return ERROR_SUCCESS;
+		break;
 	default:
 		return ERROR_NOT_AVAIL;
 		break;
@@ -137,6 +173,16 @@ DataError_t readConfig(InterfaceConfig_t *cfg) {
 	case ICFG_ADC_OFFSET_AND_TOLERANCE_RATIOS:
 		avccOffsetRatio = cfg->data[0];
 		avccOffsetToleranceRatio = cfg->data[1];
+		return ERROR_SUCCESS;
+		break;
+	case ICFG_PL_LOW_RESISTOR_WITH_TOLERANCE:
+		cfg->data[0] = lowResistor;
+		cfg->data[1] = lowResistorTolerance;
+		return ERROR_SUCCESS;
+		break;
+	case ICFG_PL_HIGH_RESISTOR_WITH_TOLERANCE:
+		cfg->data[0] = highResistor;
+		cfg->data[1] = highResistorTolerance;
 		return ERROR_SUCCESS;
 		break;
 	default:
@@ -152,13 +198,6 @@ DataError_t writeDeviceConfig(DeviceConfig_t *cfg) {
 DataError_t readDeviceConfig(DeviceConfig_t *cfg) {
 	return ERROR_NOT_AVAIL;
 } // readDeviceConfig
-
-/**
- * @param pinNumber TODO
- * @param pinMode TODO
- * @param hd TODO
- * @return TODO
- */
 
 uint8_t setPinMode(uint8_t pinNumber, PinMode_t pinMode){
 	ROS_INFO("setPinMode: Data cannot be written to the %s interface!",

@@ -3,7 +3,7 @@
  */
 // Generic headers
 #include "HwHeader.h"
-#include "Devices_interfaces.h"
+#include "AllDevicesInterfaces.h"
 
 // Header file custom to this specific chip
 #include "Device_Gpio_Mcp23017.h"
@@ -20,25 +20,21 @@ private:
 // ============================
 // Name specific to the product this device subclass will interface with.
 char HARDWARE_NAME[9] = "MCP23017";
-// The name for the functionality of the device.
-char HARDWARE_FUNCTION[5] = "GPIO";
-// What communication method is used for this device.
-const static uint8_t COMM_TYPE = COMM_TYPE_I2C;
 
 // Informating About The Chip Used
 // ===============================.
 const static uint8_t PIN_COUNT = 16;
-const static uint8_t deviceTypeId = HardwareDescriptor::DEVICE_GPIO;
+const static Device_t deviceTypeId = DEVICE_GPIO;
 
 // Pin Modes That This Chip can Accept
 // ==============================================
 const static uint8_t VALID_PIN_MODE_COUNT = 2;
-const PinMode validPinModes[VALID_PIN_MODE_COUNT] = {MODE_INPUT,
-	                                                   MODE_OUTPUT};
+const PinMode_t validPinModes[VALID_PIN_MODE_COUNT] = {MODE_INPUT,
+	                                                     MODE_OUTPUT};
 
 // Other Variables (Don't change these)
 // ====================================
-uint8_t reservedPins[PIN_COUNT];
+Interface_t reservedPins[PIN_COUNT];
 // No pin values for GPIO, only HIGH/LOW, so each bit is one pin.
 uint16_t currentPinValues;
 uint16_t requestedPinValues;
@@ -54,17 +50,12 @@ inline uint8_t getPinCount() {
 } // getPinCount
 
 //
-inline uint8_t getCommType() {
-	return COMM_TYPE;
-} // getCommType
-
-//
-inline uint8_t getDeviceTypeId() {
+inline Device_t getDeviceTypeId() {
 	return deviceTypeId;
 } // getDeviceTypeId
 
 //
-inline PinMode getValidPinModes(uint8_t i){
+inline PinMode_t getValidPinModes(uint8_t i){
 	return validPinModes[i];
 } // getValidPinModes
 
@@ -74,14 +65,9 @@ inline uint8_t getValidPinModesCount(){
 } // getValidPinModesCount
 
 //
-inline uint8_t &getReservedPins(uint8_t i){
+inline Interface_t &getReservedPins(uint8_t i){
 	return reservedPins[i];
 } // getReservedPins
-
-//
-inline char *getHardwareFunction(){
-	return HARDWARE_FUNCTION;
-} // getHardwareFunction
 
 //
 inline char *getHardwareName(){
@@ -111,71 +97,44 @@ bool deviceInit(){
 
 public:
 
-/**
- * @param pin TODO
- * @param dataType TODO
- * @return TODO
- */
-
-inline float getPinValue(uint8_t pin, DataType dataType){
-	if (dataType == PACKET_GPIO_STATE) {
-		// Gets bit and returns a numebr. Cannot bitshift a float, so this is close enough.
-		return ((uint16_t)((currentPinValues >> pin) & 0x01) != (uint16_t)0) ?
-		       1 : 0;
+DataError_t getPinValue(PinValue_t *value){
+	if (!(value->pin >= 0 && value->pin < PIN_COUNT))
+		return ERROR_DEV_PIN_INVALID;
+	if (value->fmt == VALUE_GPIO_STATE) {
+		// Gets the on/off bit and returns as a 1 or 0.
+		// value->data[0] = ((uint16_t)((currentPinValues >> pin) & 0x01) !=
+		//                   (uint16_t)0) ? 1 : 0;
+		value->data[0] = ((currentPinValues >> value->pin) & 0x01);
+		return ERROR_SUCCESS;
 	}
-	ROS_ERROR("getPinValue for device index %d got bad dataType %d for pin %d.",
-	          dataType, pin);
-	return 0;
+	return ERROR_NOT_AVAIL;
 } // getPinValue
 
-/**
- * @param pin TODO
- * @param value TODO
- * @param interfaceId TODO
- * @return TODO
- */
+DataError_t setPinValue(PinValue_t *value) {
+	// If pin is not writable, don't set it.
+	if (pinIsReadable(value->pin))
+		return ERROR_WROTE_INPUT;
+	if (!(value->pin >= 0 && value->pin < PIN_COUNT))
+		return ERROR_DEV_PIN_INVALID;
 
-bool setPinValue(uint8_t pin, float *data, DataType dataType, uint8_t
-                 interfaceId) {
-	if (getReservedPins(pin) != interfaceId) {
-		ROS_ERROR(
-			"setPinValue for device index %d got bad interface ID 0x%.2x for pin %d.",
-			deviceIndex, interfaceId, pin);
-		return false;
+	if (value->fmt == VALUE_GPIO_STATE) {
+		if (value->data[0]) // set bit
+			requestedPinValues |= (0x0001 << value->pin);
+		else // clear bit
+			requestedPinValues &= ~(0x0001 << value->pin);
+		writeDataPending = true;
+		return ERROR_SUCCESS;
 	}
-	// If pin is not going to be in output mode, don't set it.
-	if (pinIsReadable(pin)) {
-		// Error is silenceable for BIT testing.
-		ROS_INFO(
-			"setPinValue for device index %d was told to write to a pin in a reading mode.",
-			deviceIndex);
-		return false;
-	}
-	if (pin >= 0 && pin < PIN_COUNT) {
-		if (dataType == PACKET_GPIO_STATE) {
-			if (data[0]) // set bit
-				requestedPinValues |= (0x0001 << pin);
-			else // clear bit
-				requestedPinValues &= ~(0x0001 << pin);
-			writeDataPending = true;
-			return true;
-		}
-		ROS_ERROR("setPinValue for device index %d got bad dataType %d.",
-		          deviceIndex, dataType);
-		return false;
-	}
-	ROS_ERROR("setPinValue for device index %d got bad pin %d.",
-	          deviceIndex, pin);
-	return false;
+	return ERROR_NOT_AVAIL;
 } // setPinValue
 
-/**
- * Reads/writes any data related to the chip. This function will interface
- * directly with the chip's hardware interface, and is the ONLY way that any code
- * can read from or write to the chip at 'address'.
- * Note that the order this happens in is important.
- * @return if update succeeded
- */
+DataError_t writeDeviceConfig(DeviceConfig_t *cfg) {
+	return ERROR_NOT_AVAIL;
+} // writeDeviceConfig
+
+DataError_t readDeviceConfig(DeviceConfig_t *cfg) {
+	return ERROR_NOT_AVAIL;
+} // readDeviceConfig
 
 bool updateData(){
 	if (!ready())

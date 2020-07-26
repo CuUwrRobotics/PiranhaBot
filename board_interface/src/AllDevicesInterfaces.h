@@ -1,5 +1,5 @@
-#ifndef DEVICES_INTERFACES
-#define DEVICES_INTERFACES
+#ifndef DEVICES_INTERFACES_H
+#define DEVICES_INTERFACES_H
 
 // Devices
 #include "Device.cpp"
@@ -19,6 +19,6 @@
 #include "Hardware/Interface_Current_Acs781.cpp"
 #include "Hardware/Interface_Voltage_Refrence.cpp"
 #include "Hardware/Interface_Temp_Lm62.cpp"
-#include "Hardware/Interface_Power_Line.cpp"
+#include "Hardware/Interface_Voltage_Div.cpp"
 
-#endif /* ifndef DEVICES_INTERFACES */
+#endif /* ifndef DEVICES_INTERFACES_H */

@@ -12,9 +12,9 @@
 #define INTF_TEL_12V 9
 #define INTF_TEL_VIN 10
 #define INTF_TEL_SWITCHES 11
-#define INTF_TEL_LEAK 12
-#define INTF_TEL_EMERGENCY_IO 13
-#define INTF_LEAK_WARN 14 // Leak warn LED. Not controlled by external nodes.
+#define INTF_LEAK 12
+#define INTF_EMERGENCY_IO 13
+#define INTF_LED 14 // Leak warn LED. Not controlled by external nodes.
 #define INTF_ARDUINO_GPIO_PWM 15
 #define INTF_ARDUINO_ADC 16
 
@@ -59,8 +59,8 @@
 // *********************** MOVE TO MESSAGE TYPE
 // ADC Types
 // #define ADC_IN                  // Voltage is real, not estimated. (Uses diode refrence.)
-// #define ADC_DIRECT              // Reads 10-bit number directly recieved by ADC.
-// #define ADC_DIRECT_REF_3V       // Reads 10-bit reading of the vref diode.
+// #define VALUE_ADC_DIRECT              // Reads 10-bit number directly recieved by ADC.
+// #define VALUE_ADC_DIRECT_REF_3V       // Reads 10-bit reading of the vref diode.
 
 // Power Control
 #define POWER_SWITCHING_OUT

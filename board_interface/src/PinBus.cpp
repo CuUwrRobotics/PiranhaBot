@@ -9,7 +9,7 @@
  * @return TODO
  */
 
-bool PinBus::setPinMode(uint8_t index, PinMode mode){
+bool PinBus::setPinMode(uint8_t index, PinMode_t mode){
 	if (mode == MODE_INVALID) {
 		ROS_ERROR("PinBus::setPinMode: invalid mode selected\n");
 		return false;
@@ -28,7 +28,7 @@ bool PinBus::setPinMode(uint8_t index, PinMode mode){
  * @return TODO
  */
 
-inline PinMode PinBus::getPinMode(uint8_t pin) {
+inline PinMode_t PinBus::getPinMode(uint8_t pin) {
 	return pinModes[pin];
 } // PinBus::getPinMode
 
@@ -37,7 +37,7 @@ inline PinMode PinBus::getPinMode(uint8_t pin) {
  * @return TODO
  */
 
-inline bool PinBus::setPins(const PinMode *modes) {
+inline bool PinBus::setPins(const PinMode_t *modes) {
 	return (setPinModes(modes));
 } // setPins
 
@@ -46,7 +46,7 @@ inline bool PinBus::setPins(const PinMode *modes) {
  * @return TODO
  */
 
-bool PinBus::setAllPins(PinMode mode) {
+bool PinBus::setAllPins(PinMode_t mode) {
 	if (pinCount == MAX_PINS + 1) {
 		ROS_ERROR(
 			"PinBus::setAllPins: Pin count not yet set, can't assign modes.\n");
@@ -63,7 +63,7 @@ bool PinBus::setAllPins(PinMode mode) {
  * @return TODO
  */
 
-bool PinBus::setPinModes(const PinMode *modes){
+bool PinBus::setPinModes(const PinMode_t *modes){
 	if (pinCount == MAX_PINS + 1) {
 		ROS_ERROR(
 			"PinBus::setPinModes: Pin count not yet set, can't assign modes.\n");
@@ -167,7 +167,7 @@ inline uint8_t PinBus::getPinCount() {
  * @return TODO
  */
 
-bool PinBus::setBusType(BusType type) {
+bool PinBus::setBusType(BusType_t type) {
 	if (busType != BUS_INVALID) {
 		ROS_ERROR("PinBus::setBusType: Bus type already assigned!\n");
 		return false;
@@ -181,7 +181,7 @@ bool PinBus::setBusType(BusType type) {
  * @return TODO
  */
 
-inline BusType PinBus::getBusType() {
+inline BusType_t PinBus::getBusType() {
 	return busType;
 } // getBusType
 
@@ -208,7 +208,7 @@ bool PinBus::setPinCount(uint8_t count) {
  * @param pinCount TODO
  */
 
-bool PinBus::createPinBus(BusType busType, uint8_t pinCount){
+bool PinBus::createPinBus(BusType_t busType, uint8_t pinCount){
 	if (!(setBusType(busType) && setPinCount(pinCount)))
 		return false;
 	// this->pinCount = pinCount;
@@ -222,9 +222,9 @@ bool PinBus::createPinBus(BusType busType, uint8_t pinCount){
  * @param pinModes TODO
  */
 
-bool PinBus::createPinBus(BusType busType, uint8_t *pinAssignments,
+bool PinBus::createPinBus(BusType_t busType, uint8_t *pinAssignments,
                           uint8_t pinCount,
-                          const PinMode *pinModes){
+                          const PinMode_t *pinModes){
 	if (!createPinBus(busType, pinCount))
 		return false;
 	// this->busType = busType;
@@ -245,9 +245,9 @@ bool PinBus::createPinBus(BusType busType, uint8_t *pinAssignments,
  * @return TODO
  */
 
-bool PinBus::createPinBusFromSet(BusType busType, uint8_t start,
+bool PinBus::createPinBusFromSet(BusType_t busType, uint8_t start,
                                  uint8_t end,
-                                 const PinMode *pinModes){
+                                 const PinMode_t *pinModes){
 	if (!createPinBus(busType, ((end - start) + 1)))
 		return false;
 	if (!(assignPinSet(start, end)))
@@ -265,9 +265,9 @@ bool PinBus::createPinBusFromSet(BusType busType, uint8_t start,
  * @return TODO
  */
 
-bool PinBus::createUniformPinBusFromSet(BusType busType, uint8_t start,
+bool PinBus::createUniformPinBusFromSet(BusType_t busType, uint8_t start,
                                         uint8_t end,
-                                        PinMode pinMode){
+                                        PinMode_t pinMode){
 	if (!createPinBus(busType, ((end - start) + 1)))
 		return false;
 	if (!(assignPinSet(start, end)))
@@ -295,7 +295,7 @@ void PinBus::resetAll(){
  * @return TODO
  */
 
-bool PinBus::busEquals(BusType pinType) {
+bool PinBus::busEquals(BusType_t pinType) {
 	return (pinType == busType);
 } // busTypeIs
 
