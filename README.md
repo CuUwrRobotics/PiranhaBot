@@ -4,7 +4,7 @@
 - Config files for all packages go in the `/config` or `/SurfaceDevice/config` folder.
 ---
 ### Commits
-When making commits, please use this style for descriptions ([more info](http://wiki.ros.org/RecommendedRepositoryUsage)):
+When making commits, please use this style for descriptions ([more info](http://wiki.ros.org/RecommendedRepositoryUsage#Commits_and_Pull_Requests)):
 ```
 package_name: Fixed tearing when zooming in on moving images.
 ```
