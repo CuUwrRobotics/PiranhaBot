@@ -1,51 +1,14 @@
-/*
- */
-
- #include "HwHeader.h"
- #include "AllDevicesInterfaces.h"
-
- #include "Device_Pwm_Pca9685.h"
-
-/**
- * Interface_Pwm
- * @author Nicholas Steele
- */
-class Interface_Pwm : public Interface {
-private:
+#include "Interface_Pwm.h"
 // SET THESE FOR ANY NEW INTERFACE
 // ****************************************************************************
 // Information for Interacting with Other Code
 // ===========================================
 // Number of pins to be assigned to the parent device. Max = parent device max pins
-const static uint8_t PIN_COUNT = 16; // number of pins
-const static Interface_t interfaceTypeId = INTF_PWM; // The ID for this intf
-const static Device_t parentDeviceTypeId = DEVICE_PWM; // The IF for the device
+// const static uint8_t PIN_COUNT = 16; // number of pins
+// const static Interface_t interfaceTypeId = INTF_PWM; // The ID for this intf
+// const static Device_t parentDeviceTypeId = DEVICE_PWM; // The IF for the device
 // ----------------------------------------------------------------------------
 
-// uint8_t pinMapToDevice[PIN_COUNT]; // Contains a map to the devices pins.
-// uint8_t pinModes[PIN_COUNT]; // Contains a map to the devices pins.
-// interface based on HD
-// class values
-public:
-
-/* Don't change these; they allow the base class to access locally assigned
- * variables.
- *****************************************************************************/
-
-//
-inline Interface_t getInterfaceTypeId(){
-	return interfaceTypeId;
-} // getTypeId
-
-//
-inline uint8_t getParentTypeId(){
-	return parentDeviceTypeId;
-} // getTypeId
-
-//
-inline uint8_t getPinCount(){
-	return PIN_COUNT;
-} // getPinCount
 
 /* These must be changed per interface to ensure operability.
  *****************************************************************************/
@@ -54,12 +17,12 @@ inline uint8_t getPinCount(){
  * updateData() will be called after this, so there's no needto call it here.
  */
 
-void prepareInterface(){
+void Interface_Pwm::prepareInterface(){
 	pinBus.setAllPins(MODE_OUTPUT);
 	commDevice->setPinModes(pinBus);
 } // prepareInterface
 
-DataError_t readPin(PinValue_t *valueIn) {
+DataError_t Interface_Pwm::readPin(PinValue_t *valueIn) {
 	if (!(valueIn->pin >= 0 && valueIn->pin < PIN_COUNT))
 		return ERROR_INTF_PIN_INVALID;
 
@@ -91,7 +54,7 @@ DataError_t readPin(PinValue_t *valueIn) {
 	} // switch
 } // readPin
 
-DataError_t writePin(PinValue_t *valueIn) {
+DataError_t Interface_Pwm::writePin(PinValue_t *valueIn) {
 	if (!(valueIn->pin >= 0 && valueIn->pin < PIN_COUNT))
 		return ERROR_INTF_PIN_INVALID;
 
@@ -141,28 +104,25 @@ DataError_t writePin(PinValue_t *valueIn) {
 	} // switch
 } // writePin
 
-DataError_t writeConfig(InterfaceConfig_t *cfg) {
+DataError_t Interface_Pwm::writeConfig(InterfaceConfig_t *cfg) {
 	return ERROR_NOT_AVAIL;
 } // writeConfig
 
-DataError_t readConfig(InterfaceConfig_t *cfg) {
+DataError_t Interface_Pwm::readConfig(InterfaceConfig_t *cfg) {
 	return ERROR_NOT_AVAIL;
 } // readConfig
 
-DataError_t writeDeviceConfig(DeviceConfig_t *cfg) {
+DataError_t Interface_Pwm::writeDeviceConfig(DeviceConfig_t *cfg) {
 	return ERROR_NOT_AVAIL;
 } // writeDeviceConfig
 
-DataError_t readDeviceConfig(DeviceConfig_t *cfg) {
+DataError_t Interface_Pwm::readDeviceConfig(DeviceConfig_t *cfg) {
 	return ERROR_NOT_AVAIL;
 } // readDeviceConfig
 
 // **** OVERRIDES BASE CLASS ****
-uint8_t setPinMode(uint8_t pinNumber, PinMode_t pinMode){ // TODO: DataError_t
+uint8_t Interface_Pwm::setPinMode(uint8_t pinNumber, PinMode_t pinMode){ // TODO: DataError_t
 	ROS_INFO("setPinMode: Pin modes cannot be written to the %s interface!",
 	         interfaceIdToCharArray(interfaceTypeId));
 	return 0;
 } /* setPinMode */
-}
-
-;

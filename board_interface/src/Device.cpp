@@ -1,109 +1,20 @@
 // Handler for hardware devices.
 
-#include "HwHeader.h"
-#include "AllDevicesInterfaces.h"
-#include "PinBus.h"
+#include "Device.h"
 
-/**
- * Device
- * @author
- */
-class Device {
-private:
-
-/**
- * @param addr TODO
- * @return TODO
- */
-
-virtual bool deviceInit() = 0;
-
-/**
- * Used to give base class access to local variables.
- */
-
-virtual uint8_t getPinCount()  = 0;
-
-/**
- * Used to give base class access to local variables.
- * @return The valid pin modes array declared at top of file.
- */
-
-virtual PinMode_t getValidPinModes(uint8_t i) = 0;
-
-/**
- * Used to give base class access to local variables.
- * @return Size of the valid pin modes array, which cannot be extrapolated from
- * the pointer returned by getValidPinModes()
- */
-
-virtual uint8_t getValidPinModesCount() = 0;
-
-/**
- * Used to give base class access to local variables.
- * @return reservedPins array of size getPinCount()
- */
-
-virtual Interface_t &getReservedPins(uint8_t i) = 0;
-
-/**
- * Used to give base class access to local variables.
- * @return String of the name of the chip used
- */
-
-virtual char *getHardwareName() = 0;
-
-public:
-
-PinBus currentPinBus; // Current state of all pins
-PinBus requestedPinBus; // State of pins not yet set
-bool writeDataPending = false;
-bool pinModeChangePending = false;
-uint8_t address; // Address for communications
-bool deviceIsSetup = false;
-
-uint8_t deviceIndex; // Index of the device object
-
-/**
- * Used to give base class access to local variables.
- * @return TODO
- */
-
-virtual Device_t getDeviceTypeId() = 0;
-
-/**
- * Used to get the value of a pin. If pin is readable, value will be the last read data.
- * @return DataError_t error usable with errorCharArray.
- */
-
-virtual DataError_t getPinValue(PinValue_t *value) = 0;
-
-/**
- * Used to set the value of a pin
- * If pin is readable, this will fail.
- * @return DataError_t error usable with errorCharArray.
- */
-
-virtual DataError_t setPinValue(PinValue_t *value) = 0;
-
-/**
- * Used to write a configuration for the device object
- * @return DataError_t error usable with errorCharArray.
- */
-
-virtual DataError_t writeDeviceConfig(DeviceConfig_t *cfg) = 0;
-
-/**
- * Used to get a configuration from the device object
- * @return DataError_t error usable with errorCharArray.
- */
-
-virtual DataError_t readDeviceConfig(DeviceConfig_t *cfg) = 0;
+// PinBus currentPinBus; // Current state of all pins
+// PinBus requestedPinBus; // State of pins not yet set
+// bool writeDataPending = false;
+// bool pinModeChangePending = false;
+// uint8_t address; // Address for communications
+// bool deviceIsSetup = false;
+//
+// uint8_t deviceIndex; // Index of the device object
 
 /**
  * @return If given mode is valied for this device.
  */
-bool pinModeIsValid(PinMode_t mode) {
+bool Device::pinModeIsValid(PinMode_t mode) {
 	for (int i = 0; i < getValidPinModesCount(); i++) {
 		if (mode == getValidPinModes(i))
 			return true;
@@ -119,7 +30,7 @@ bool pinModeIsValid(PinMode_t mode) {
  */
 
 // virtual bool init(uint8_t index, uint8_t addr, BusType_t busType) = 0; /* getTypeId */
-bool init(uint8_t index, uint8_t addr, BusType_t busType){
+bool Device::init(uint8_t index, uint8_t addr, BusType_t busType){
 	printf("Starting %s device %s at address 0x%.2X.\n",
 	       deviceHardwareFunction(getDeviceTypeId()), getHardwareName(), addr);
 	deviceIsSetup = false;
@@ -146,7 +57,7 @@ bool init(uint8_t index, uint8_t addr, BusType_t busType){
  * @return If handover was errorVal
  */
 
-bool attachInterface(PinBus pinBus, Interface_t interfaceId) {
+bool Device::attachInterface(PinBus pinBus, Interface_t interfaceId) {
 	// Check pins and ensure they are not yet set to an interface.
 	if (!verifyPins(pinBus)) {
 		log_error("Device #%d (%s): Bad pin configs; not changing modes",
@@ -183,16 +94,9 @@ bool attachInterface(PinBus pinBus, Interface_t interfaceId) {
  * @return This device's index.
  */
 
-uint8_t getDeviceIndex(){
+uint8_t Device::getDeviceIndex(){
 	return deviceIndex;
 } // getDeviceIndex
-
-/* Updates any data from the device. If this device is readable, this will always check any pins
- * assigned as inputs. If it is not, if there is new data to be written, that data will be sent to
- * the device.
- * @return True if reads and writes were errorVal or unneccesary.
- */
-virtual bool updateData() = 0;
 
 /**
  * @param pinNumbers TODO
@@ -201,7 +105,7 @@ virtual bool updateData() = 0;
  * @return TODO
  */
 
-bool setPinModes(PinBus pinBus) {
+bool Device::setPinModes(PinBus pinBus) {
 	if (!verifyPins(pinBus)) {
 		printf("%s DEVICE -> ERROR: Bad pin configs; not chainging pin modes\n",
 		       getHardwareName());
@@ -226,7 +130,7 @@ bool setPinModes(PinBus pinBus) {
  * @return TODO
  */
 
-bool setPinMode(uint8_t pinNumber, PinMode_t pinMode) {
+bool Device::setPinMode(uint8_t pinNumber, PinMode_t pinMode) {
 	if (!pinModeIsValid(pinMode)) {
 		printf("%s DEVICE -> ERROR: bad pin mode\n", getHardwareName());
 		return false;
@@ -247,7 +151,7 @@ bool setPinMode(uint8_t pinNumber, PinMode_t pinMode) {
  * @return TODO
  */
 
-bool verifyPins(PinBus pinBus) {
+bool Device::verifyPins(PinBus pinBus) {
 	if (pinBus.getPinCount() < 0 || pinBus.getPinCount() > getPinCount()) {
 		printf("%s DEVICE: ERROR: pin counts too high or low\n", getHardwareName());
 		return false;
@@ -275,7 +179,7 @@ bool verifyPins(PinBus pinBus) {
  * @return TODO
  */
 
-bool readableDataAvailable() {
+bool Device::readableDataAvailable() {
 	for (uint8_t pin = 0; pin < getPinCount(); pin++) // For each pin
 		if (currentPinBus.getPinMode(pin) == MODE_INPUT) // If the pin uses this mode
 			return true; // Then there is some readable data
@@ -283,46 +187,17 @@ bool readableDataAvailable() {
 } // readableDataAvailable
 
 /**
- * @return TODO
- */
-
-inline bool pinIsReadable(uint8_t pin) {
-	if (currentPinBus.getPinMode(pin) == MODE_INPUT) // If the pin is set to input
-		return true; // Then there is some readable data
-	return false; // There was no readable data
-} // readableDataAvailable
-
-/**
- * @return TODO
- */
-
-inline PinMode_t getPinMode(uint8_t pin){
-	return currentPinBus.getPinMode(pin);
-} // getPinModes
-
-/**
  * @param pin TODO
  * @return TODO
  */
 
-Interface_t getPinInterface(uint8_t pin) {
+Interface_t Device::getPinInterface(uint8_t pin) {
 	return getReservedPins(pin);
 } // getPinInterfaceOnPin
 
 /*
  * @return
  */
-PinBus getPinBus() {
+PinBus Device::getPinBus() {
 	return currentPinBus;
 } // getPinBus
-
-/**
- * @return If the device has been initialized yet.
- */
-
-inline bool ready(){
-	return deviceIsSetup;
-} /* ready */
-}
-
-;

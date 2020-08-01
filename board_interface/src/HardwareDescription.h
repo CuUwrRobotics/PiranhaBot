@@ -3,7 +3,12 @@
  */
 #ifndef HARDWARE_DESCRIPTION_H
 #define HARDWARE_DESCRIPTION_H
- #include "HwHeader.h"
+#include "stdint.h"
+
+const static uint8_t TOTAL_INTERFACES		= 18;
+const static uint8_t TOTAL_DEVICES			= 8;
+
+const uint8_t MAX_PIN_COUNT							= 16;
 
 // Interface names
 enum Interface_t {INTF_INVALID,

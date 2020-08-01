@@ -3,9 +3,9 @@
  * (true) or the largest (false)
  */
 
-	#include "HwHeader.h"
-	#include "BitTesting.h"
+#include "BitTesting.h"
 
+namespace bit_testing {
 /**
  * @param intf TODO
  * @param dev TODO
@@ -919,3 +919,4 @@ void dumpConfiguration(bool shrinkRepeatedPins, Interface **interfaces,
 		printf(":");
 	printf("%s\n", NO_COLOR);
 } // dumpConfigruation
+} // namespace bit_testing

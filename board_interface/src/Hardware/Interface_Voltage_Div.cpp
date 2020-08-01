@@ -1,42 +1,34 @@
-// Generic headers
- #include "HwHeader.h"
- #include "AllDevicesInterfaces.h"
+#include "Interface_Voltage_Div.h"
 
-/**
- * Interface_Voltage_Div
- * @author
- */
-class Interface_Voltage_Div : public Interface {
-private:
 // SET THESE FOR ANY NEW INTERFACE
 // ****************************************************************************
 // Information for Interacting with Other Code
 // ===========================================
 // Number of pins to be assigned to the parent device. Max = parent device max pins
-const static uint8_t PIN_COUNT = 1;
-// IDs which indicate what this is and what it should be connected to
-const static Interface_t interfaceTypeId = INTF_VOLTAGE_DIVIDER;
-const static Device_t parentDeviceTypeId = DEVICE_ADC;
-
-// Calibration ratios, preset to a default offset and a tolerance +- 100%
-float avccOffsetRatio = 1; // multiply by measured to get actual.
-float avccOffsetToleranceRatio = 1; // multiply by actual to get ± tolerance value
-// For data conversions
-float adcSteps = 1024; // number of steps the ADC uses to save data (ie reading at AVCC)
-float avccTheoretical = 5.00; // Theoretical AVCC
-
-float highResistor = 1; // Higher voltage resistor in circuit
-float highResistorTolerance = 0.05; // 5% resistor if highResistor is measured, this is 0.
-float lowResistor = 1; // Lower voltage resistor in cicuit
-float lowResistorTolerance = 0.05;
-float voltageMeasured = 0; // Voltage on the power line, after calculating for resistor divider
-float toleranceVolts = 0; // Tolerance on voltageMeasured
+// const static uint8_t PIN_COUNT = 1;
+// // IDs which indicate what this is and what it should be connected to
+// const static Interface_t interfaceTypeId = INTF_VOLTAGE_DIVIDER;
+// const static Device_t parentDeviceTypeId = DEVICE_ADC;
+//
+// // Calibration ratios, preset to a default offset and a tolerance +- 100%
+// float avccOffsetRatio = 1; // multiply by measured to get actual.
+// float avccOffsetToleranceRatio = 1; // multiply by actual to get ± tolerance value
+// // For data conversions
+// float adcSteps = 1024; // number of steps the ADC uses to save data (ie reading at AVCC)
+// float avccTheoretical = 5.00; // Theoretical AVCC
+//
+// float highResistor = 1; // Higher voltage resistor in circuit
+// float highResistorTolerance = 0.05; // 5% resistor if highResistor is measured, this is 0.
+// float lowResistor = 1; // Lower voltage resistor in cicuit
+// float lowResistorTolerance = 0.05;
+// float voltageMeasured = 0; // Voltage on the power line, after calculating for resistor divider
+// float toleranceVolts = 0; // Tolerance on voltageMeasured
 
 /**
  * @return TODO
  */
 
-bool calculateValues(){
+bool Interface_Voltage_Div::calculateValues(){
 	float voltage;
 	DataError_t errorVal;
 	PinValue_t val;
@@ -58,27 +50,6 @@ bool calculateValues(){
 	return true;
 } // calculateValues
 
-public:
-
-/* Don't change these; they allow the base class to access locally assigned
- * variables.
- *****************************************************************************/
-
-//
-inline Interface_t getInterfaceTypeId(){
-	return interfaceTypeId;
-} // getInterfaceTypeId
-
-//
-inline uint8_t getParentTypeId(){
-	return parentDeviceTypeId;
-} // getParentTypeId
-
-//
-inline uint8_t getPinCount(){
-	return PIN_COUNT;
-} // getPinCount
-
 /* These must be changed per interface to ensure operability.
  *****************************************************************************/
 
@@ -86,7 +57,7 @@ inline uint8_t getPinCount(){
  * updateData() will be called after this, so there's no needto call it here.
  */
 
-void prepareInterface(){
+void Interface_Voltage_Div::prepareInterface(){
 	pinBus.setAllPins(MODE_INPUT);
 	commDevice->setPinModes(pinBus);
 	// Get conversion values from the ADC device
@@ -110,7 +81,7 @@ void prepareInterface(){
 			interfaceIndex, errorCharArray(errorVal));
 } // prepareInterface
 
-DataError_t readPin(PinValue_t *valueIn) {
+DataError_t Interface_Voltage_Div::readPin(PinValue_t *valueIn) {
 	if (!(valueIn->pin >= 0 && valueIn->pin < PIN_COUNT))
 		return ERROR_INTF_PIN_INVALID;
 
@@ -141,11 +112,11 @@ DataError_t readPin(PinValue_t *valueIn) {
 	} // switch
 } // readPin
 
-DataError_t writePin(PinValue_t *value) {
+DataError_t Interface_Voltage_Div::writePin(PinValue_t *value) {
 	return ERROR_NOT_AVAIL;
 } /* writePin */
 
-DataError_t writeConfig(InterfaceConfig_t *cfg) {
+DataError_t Interface_Voltage_Div::writeConfig(InterfaceConfig_t *cfg) {
 	switch (cfg->fmt) {
 	case ICFG_ADC_OFFSET_AND_TOLERANCE_RATIOS:
 		cfg->data[0] = avccOffsetRatio;
@@ -168,7 +139,7 @@ DataError_t writeConfig(InterfaceConfig_t *cfg) {
 	} // switch
 } // writeConfig
 
-DataError_t readConfig(InterfaceConfig_t *cfg) {
+DataError_t Interface_Voltage_Div::readConfig(InterfaceConfig_t *cfg) {
 	switch (cfg->fmt) {
 	case ICFG_ADC_OFFSET_AND_TOLERANCE_RATIOS:
 		avccOffsetRatio = cfg->data[0];
@@ -191,19 +162,16 @@ DataError_t readConfig(InterfaceConfig_t *cfg) {
 	} // switch
 } // readConfig
 
-DataError_t writeDeviceConfig(DeviceConfig_t *cfg) {
+DataError_t Interface_Voltage_Div::writeDeviceConfig(DeviceConfig_t *cfg) {
 	return ERROR_NOT_AVAIL;
 } // writeDeviceConfig
 
-DataError_t readDeviceConfig(DeviceConfig_t *cfg) {
+DataError_t Interface_Voltage_Div::readDeviceConfig(DeviceConfig_t *cfg) {
 	return ERROR_NOT_AVAIL;
 } // readDeviceConfig
 
-uint8_t setPinMode(uint8_t pinNumber, PinMode_t pinMode){
+uint8_t Interface_Voltage_Div::setPinMode(uint8_t pinNumber, PinMode_t pinMode){
 	ROS_INFO("setPinMode: Data cannot be written to the %s interface!",
 	         interfaceIdToCharArray(interfaceTypeId));
 	return 0;
 } /* setPinMode */
-}
-
-;

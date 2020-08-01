@@ -1,73 +1,31 @@
-// Generic headers
-#include "HwHeader.h"
-#include "AllDevicesInterfaces.h"
+#include "Device_Pwm_Pca9685.h"
 
-// Header file custom to this specific chip
-// #include "Device_Gpio_Mcp23017.h"
-
-class Device_Pwm_Pca9685 : public Device {
-private:
 // THESE VALUES MUST BE REVIEWED ON CREATION OF EACH NEW DEVICE SUBCLASS
 // ***************************************************************************
 // Metadata for Troubleshooting
 // ============================
 // Name specific to the product this device subclass will interface with.
-char HARDWARE_NAME[8] = "PCA9685";
-
-// Informating About The Chip Used
-// ===============================.
-const static uint8_t PIN_COUNT = 16;
-const static Device_t deviceTypeId = DEVICE_PWM;
-
-// Pin Modes That This Chip can Accept
-// ==============================================
-const static uint8_t VALID_PIN_MODE_COUNT = 1;
-const PinMode_t validPinModes[VALID_PIN_MODE_COUNT] = {MODE_OUTPUT};
-
-// Other Variables (Don't change these)
-// ====================================
-Interface_t reservedPins[PIN_COUNT];
-// For storing tick rate (duty cycle)
-float currentPinTicks[PIN_COUNT];
-float requestedPinTicks[PIN_COUNT];
-// For storing device frequncy
-float currentFrequencyValue;
-float requestedFrequencyValue;
-
-/* These give the base Device class access to the above local variables. They
- * don't need any modification. See more info about each function in the Device
- * class.
- ******************************************************************************/
-
+// char HARDWARE_NAME[8] = "PCA9685";
 //
-inline uint8_t getPinCount() {
-	return PIN_COUNT;
-} // getPinCount
-
+// // Informating About The Chip Used
+// // ===============================.
+// const static uint8_t PIN_COUNT = 16;
+// const static Device_t deviceTypeId = DEVICE_PWM;
 //
-inline Device_t getDeviceTypeId() {
-	return deviceTypeId;
-} // getDeviceTypeId
-
+// // Pin Modes That This Chip can Accept
+// // ==============================================
+// const static uint8_t VALID_PIN_MODE_COUNT = 1;
+// const PinMode_t validPinModes[VALID_PIN_MODE_COUNT] = {MODE_OUTPUT};
 //
-inline PinMode_t getValidPinModes(uint8_t i){
-	return validPinModes[i];
-} // getValidPinModes
-
-//
-inline uint8_t getValidPinModesCount(){
-	return VALID_PIN_MODE_COUNT;
-} // getValidPinModesCount
-
-//
-inline Interface_t &getReservedPins(uint8_t i){
-	return reservedPins[i];
-} // getReservedPins
-
-//
-inline char *getHardwareName(){
-	return HARDWARE_NAME;
-} // getHardwareName
+// // Other Variables (Don't change these)
+// // ====================================
+// Interface_t reservedPins[PIN_COUNT];
+// // For storing tick rate (duty cycle)
+// float currentPinTicks[PIN_COUNT];
+// float requestedPinTicks[PIN_COUNT];
+// // For storing device frequncy
+// float currentFrequencyValue;
+// float requestedFrequencyValue;
 
 /* These actually drive the chip, and must be different for each device subclass.
  ******************************************************************************/
@@ -79,7 +37,7 @@ inline char *getHardwareName(){
  * @return whether the init worked.
  */
 
-bool deviceInit(){
+bool Device_Pwm_Pca9685::deviceInit(){
 	// Init chip here
 
 	// Default modes and states assigned here
@@ -90,9 +48,7 @@ bool deviceInit(){
 	return true;
 } /* deviceInit */
 
-public:
-
-inline DataError_t getPinValue(PinValue_t *value){
+DataError_t Device_Pwm_Pca9685::getPinValue(PinValue_t *value){
 	if (value->fmt == VALUE_PWM_FREQ) {
 		value->data[0] = currentFrequencyValue;
 		return ERROR_SUCCESS;
@@ -112,7 +68,7 @@ inline DataError_t getPinValue(PinValue_t *value){
  * @return TODO
  */
 
-DataError_t setPinValue(PinValue_t *value) {
+DataError_t Device_Pwm_Pca9685::setPinValue(PinValue_t *value) {
 	if (!(value->pin >= 0 && value->pin < PIN_COUNT))
 		return ERROR_DEV_PIN_INVALID;
 	// Don't flag for a data write if no changes are made.
@@ -136,11 +92,11 @@ DataError_t setPinValue(PinValue_t *value) {
 	return ERROR_NOT_AVAIL;
 } // setPinValue
 
-DataError_t writeDeviceConfig(DeviceConfig_t *cfg) {
+DataError_t Device_Pwm_Pca9685::writeDeviceConfig(DeviceConfig_t *cfg) {
 	return ERROR_NOT_AVAIL;
 } // writeDeviceConfig
 
-DataError_t readDeviceConfig(DeviceConfig_t *cfg) {
+DataError_t Device_Pwm_Pca9685::readDeviceConfig(DeviceConfig_t *cfg) {
 	return ERROR_NOT_AVAIL;
 } // readDeviceConfig
 
@@ -152,7 +108,7 @@ DataError_t readDeviceConfig(DeviceConfig_t *cfg) {
  * @return if update succeeded
  */
 
-bool updateData(){
+bool Device_Pwm_Pca9685::updateData(){
 	if (!ready())
 		return false;
 	// Check if any pins need their modes changed
@@ -194,6 +150,3 @@ bool updateData(){
 	}
 	return true;
 } // updateData
-}
-
-;

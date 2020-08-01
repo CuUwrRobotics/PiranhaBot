@@ -1,6 +1,9 @@
 #ifndef PINBUS_H
 #define PINBUS_H
+
 #include <stdio.h>
+#include <stdint.h>
+#include "Logger.h"
 
 enum BusType_t {BUS_INVALID, BUS_GPIO, BUS_ADC, BUS_PWM, BUS_OTHER};
 // enum PinState {STATE_INVALID, STATE_ON, STATE_OFF, STATE_NONE, STATE_VARIABLE};
@@ -15,21 +18,38 @@ public:
 
 bool setBusType(BusType_t type);
 
-BusType_t getBusType();
+/**
+ * @param type TODO
+ * @return TODO
+ */
+
+inline BusType_t getBusType() {
+	return busType;
+} // getBusType
 
 bool setPinCount(uint8_t count);
 
-inline bool setPin(uint8_t pin, PinMode_t mode);
+// inline bool setPin(uint8_t pin, PinMode_t mode);
 
 bool setPinMode(uint8_t pin, PinMode_t mode);
 
-// bool setPinState(uint8_t pin, PinState state);
+/**
+ * @param pin TODO
+ * @return TODO
+ */
 
-PinMode_t getPinMode(uint8_t pin);
+inline PinMode_t getPinMode(uint8_t pin) {
+	return pinModes[pin];
+} // getPinMode
 
-// PinState getPinState(uint8_t pin);
+/**
+ * @param modes TODO
+ * @return TODO
+ */
 
-inline bool setPins(const PinMode_t *modes);
+inline bool setPins(const PinMode_t *modes) {
+	return (setPinModes(modes));
+} // setPins
 
 bool setAllPins(PinMode_t modes);
 
@@ -51,13 +71,19 @@ bool assignPins(uint8_t *pinNumbers, uint8_t pinNumbersLength);
 bool assignPinSet(uint8_t startPin, uint8_t endPin);
 
 // Returns the pin assignment for the pin at index
-inline uint8_t getPin(uint8_t index);
+inline uint8_t getPin(uint8_t index) {
+	return pinAssignments[index];
+} // getPin
 
 // Returns full array of pin assignemnts
-inline uint8_t *getPins();
+inline uint8_t *getPins() {
+	return pinAssignments;
+} // getPins
 
 // Returns full array of pin assignemnts
-inline uint8_t getPinCount();
+inline uint8_t getPinCount() {
+	return pinCount;
+} // getPins
 
 bool createPinBus(BusType_t busType, uint8_t pinCount);
 
@@ -104,6 +130,22 @@ BusType_t busType = BUS_INVALID;
 
 // class PinBus
 
+// class PinBus
+
+// class PinBus
+
+// class PinBus
+
+// class PinBus
+
+// class PinBus
+
+// class PinBus
+
+// class PinBus
+
+// class PinBus
+
 // Sketchy
-#include "PinBus.cpp"
+// #include "PinBus.cpp"
 #endif /* ifndef PINBUS_H */

@@ -2,23 +2,23 @@
 #define DEVICES_INTERFACES_H
 
 // Devices
-#include "Device.cpp"
-#include "Hardware/Device_Gpio_Mcp23017.cpp"
-#include "Hardware/Device_Pwm_Pca9685.cpp"
-#include "Hardware/Device_Adc_Mcp3008.cpp"
+#include "Device.h"
+#include "Hardware/Device_Gpio_Mcp23017.h"
+#include "Hardware/Device_Pwm_Pca9685.h"
+#include "Hardware/Device_Adc_Mcp3008.h"
 
 // Interfaces for the devices
-#include "Interface.cpp"
-#include "Hardware/Interface_Power.cpp"
-#include "Hardware/Interface_Leak.cpp"
-#include "Hardware/Interface_EmergIO.cpp"
-#include "Hardware/Interface_LeakLed.cpp"
-#include "Hardware/Interface_Gpio.cpp"
-#include "Hardware/Interface_Pwm.cpp"
-#include "Hardware/Interface_Adc.cpp"
-#include "Hardware/Interface_Current_Acs781.cpp"
-#include "Hardware/Interface_Voltage_Refrence.cpp"
-#include "Hardware/Interface_Temp_Lm62.cpp"
-#include "Hardware/Interface_Voltage_Div.cpp"
+#include "Interface.h"
+#include "Hardware/Interface_Power.h"
+#include "Hardware/Interface_Leak.h"
+#include "Hardware/Interface_EmergIO.h"
+#include "Hardware/Interface_LeakLed.h"
+#include "Hardware/Interface_Gpio.h"
+#include "Hardware/Interface_Pwm.h"
+#include "Hardware/Interface_Adc.h"
+#include "Hardware/Interface_Current_Acs781.h"
+#include "Hardware/Interface_Voltage_Refrence.h"
+#include "Hardware/Interface_Temp_Lm62.h"
+#include "Hardware/Interface_Voltage_Div.h"
 
 #endif /* ifndef DEVICES_INTERFACES_H */

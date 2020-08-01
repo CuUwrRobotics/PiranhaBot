@@ -1,74 +1,32 @@
-// Generic headers
-#include "HwHeader.h"
-#include "AllDevicesInterfaces.h"
 #include "Hardware/Device_Adc_Mcp3008.h"
 
-// Header file custom to this specific chip
-// #include "Device_Gpio_Mcp23017.h"
-
-class Device_Adc_Mcp3008 : public Device {
-private:
 // THESE VALUES MUST BE REVIEWED ON CREATION OF EACH NEW DEVICE SUBCLASS
 // ***************************************************************************
 // Metadata for Troubleshooting
 // ============================
 // Name specific to the product this device subclass will interface with.
-char HARDWARE_NAME[8] = "MCP3008";
-
-// Informating About The Chip Used
-// ===============================.
-const static uint8_t PIN_COUNT = 8;
-const static Device_t deviceTypeId = DEVICE_ADC;
-
-// Pin Modes That This Chip can Accept
-// ==============================================
-const static uint8_t VALID_PIN_MODE_COUNT = 1;
-const PinMode_t validPinModes[VALID_PIN_MODE_COUNT] = {MODE_INPUT};
-
-// Other Variables (Don't change these)
-// ====================================
-Interface_t reservedPins[PIN_COUNT];
-// For storing tick rate (duty cycle)
-float pinValues[PIN_COUNT];
+// char HARDWARE_NAME[8] = "MCP3008";
+//
+// // Informating About The Chip Used
+// // ===============================.
+// const static uint8_t PIN_COUNT = 8;
+// const static Device_t deviceTypeId = DEVICE_ADC;
+//
+// // Pin Modes That This Chip can Accept
+// // ==============================================
+// const static uint8_t VALID_PIN_MODE_COUNT = 1;
+// const PinMode_t validPinModes[VALID_PIN_MODE_COUNT] = {MODE_INPUT};
+//
+// // Other Variables (Don't change these)
+// // ====================================
+// Interface_t reservedPins[PIN_COUNT];
+// // For storing tick rate (duty cycle)
+// float pinValues[PIN_COUNT];
 
 // These are specific to the MCP3008 on the interfacing board REV A
 // const float ADC_STEPS = 1024;
 // const float AVCC_THEORETICAL_VALUE = 5.00;
 
-/* These give the base Device class access to the above local variables. They
- * don't need any modification. See more info about each function in the Device
- * class.
- ******************************************************************************/
-
-//
-inline uint8_t getPinCount() {
-	return PIN_COUNT;
-} // getPinCount
-
-//
-inline Device_t getDeviceTypeId() {
-	return deviceTypeId;
-} // getDeviceTypeId
-
-//
-inline PinMode_t getValidPinModes(uint8_t i){
-	return validPinModes[i];
-} // getValidPinModes
-
-//
-inline uint8_t getValidPinModesCount(){
-	return VALID_PIN_MODE_COUNT;
-} // getValidPinModesCount
-
-//
-inline Interface_t &getReservedPins(uint8_t i){
-	return reservedPins[i];
-} // getReservedPins
-
-//
-inline char *getHardwareName(){
-	return HARDWARE_NAME;
-} // getHardwareName
 
 /* These actually drive the chip, and must be different for each device subclass.
  ******************************************************************************/
@@ -80,7 +38,7 @@ inline char *getHardwareName(){
  * @return whether the init worked.
  */
 
-bool deviceInit(){
+bool Device_Adc_Mcp3008::deviceInit(){
 	// Init chip here
 
 	// Default modes and states assigned here
@@ -95,12 +53,10 @@ bool deviceInit(){
 	return true;
 } /* deviceInit */
 
-public:
-
 /**
  */
 
-inline DataError_t getPinValue(PinValue_t *value){
+DataError_t Device_Adc_Mcp3008::getPinValue(PinValue_t *value){
 	if (!(value->pin >= 0 && value->pin < PIN_COUNT))
 		return ERROR_DEV_PIN_INVALID;
 	if (value->fmt == VALUE_ADC_DIRECT) { // Data from a pin
@@ -114,15 +70,15 @@ inline DataError_t getPinValue(PinValue_t *value){
  * Can't set the pin value on an ADC
  */
 
-DataError_t setPinValue(PinValue_t *value) {
+DataError_t Device_Adc_Mcp3008::setPinValue(PinValue_t *value) {
 	return ERROR_NOT_AVAIL;
 } // setPinValue
 
-DataError_t writeDeviceConfig(DeviceConfig_t *cfg) {
+DataError_t Device_Adc_Mcp3008::writeDeviceConfig(DeviceConfig_t *cfg) {
 	return ERROR_NOT_AVAIL;
 } // writeDeviceConfig
 
-DataError_t readDeviceConfig(DeviceConfig_t *cfg) {
+DataError_t Device_Adc_Mcp3008::readDeviceConfig(DeviceConfig_t *cfg) {
 	if (cfg->fmt == DCFG_ADC_STEPS) { // How many steps there are in the ADC measurements
 		cfg->data[0] = ADC_STEPS;
 		return ERROR_SUCCESS;
@@ -138,7 +94,7 @@ DataError_t readDeviceConfig(DeviceConfig_t *cfg) {
  * Reads data
  */
 
-bool updateData(){
+bool Device_Adc_Mcp3008::updateData(){
 	if (!ready())
 		return false;
 	// Check if any data is readable on any pins. If so, read it.
@@ -167,6 +123,3 @@ bool updateData(){
 		pinValues[7] = 819; // 48v ==> 4v with resitor divider
 	return true;
 } // updateData
-}
-
-;

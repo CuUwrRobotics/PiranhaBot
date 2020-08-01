@@ -1,54 +1,22 @@
-
-// Generic headers
- #include "HwHeader.h"
- #include "AllDevicesInterfaces.h"
-
 // Specific to the device
-// #include "Device_Adc_Mcp3008.h"
+#include "Interface_Adc.h"
 
-/**
- * Interface_Adc
- * @author
- */
-class Interface_Adc : public Interface {
-private:
 // SET THESE FOR ANY NEW INTERFACE
 // ****************************************************************************
 // Information for Interacting with Other Code
 // ===========================================
 // Number of pins to be assigned to the parent device. Max = parent device max pins
-const static uint8_t PIN_COUNT = 8;
-// IDs which indicate what this is and what it should be connected to
-const static Interface_t interfaceTypeId = INTF_ADC;
-const static Device_t parentDeviceTypeId = DEVICE_ADC;
-
-// Calibration ratios, preset to a default offset and a tolerance +- 100%
-float avccOffsetRatio = 1; // multiply by measured to get actual.
-float avccOffsetToleranceRatio = 1; // multiply by actual to get ± tolerance value
-// For data conversions
-float adcSteps = 1024; // number of steps the ADC uses to save data (ie reading at AVCC)
-float avccTheoretical = 5.00; // Theoretical AVCC
-
-public:
-
-/* Don't change these; they allow the base class to access locally assigned
- * variables.
- *****************************************************************************/
-
+// const static uint8_t PIN_COUNT = 8;
+// // IDs which indicate what this is and what it should be connected to
+// const static Interface_t interfaceTypeId = INTF_ADC;
+// const static Device_t parentDeviceTypeId = DEVICE_ADC;
 //
-inline Interface_t getInterfaceTypeId(){
-	return interfaceTypeId;
-} // getInterfaceTypeId
-
-//
-inline uint8_t getParentTypeId(){
-	return parentDeviceTypeId;
-} // getParentTypeId
-
-//
-inline uint8_t getPinCount(){
-	return PIN_COUNT;
-} // getPinCount
+// // Calibration ratios, preset to a default offset and a tolerance +- 100%
+// float avccOffsetRatio = 1; // multiply by measured to get actual.
+// float avccOffsetToleranceRatio = 1; // multiply by actual to get ± tolerance value
+// // For data conversions
+// float adcSteps = 1024; // number of steps the ADC uses to save data (ie reading at AVCC)
+// float avccTheoretical = 5.00; // Theoretical AVCC
 
 /* These must be changed per interface to ensure operability.
  *****************************************************************************/
@@ -57,7 +25,7 @@ inline uint8_t getPinCount(){
  * updateData() will be called after this, so there's no needto call it here.
  */
 
-void prepareInterface(){
+void Interface_Adc::prepareInterface(){
 	pinBus.setAllPins(MODE_INPUT);
 	commDevice->setPinModes(pinBus);
 	// Get conversion values from the ADC device
@@ -81,7 +49,7 @@ void prepareInterface(){
 			interfaceIndex, errorCharArray(errorVal));
 } // prepareInterface
 
-DataError_t readPin(PinValue_t *valueIn) {
+DataError_t Interface_Adc::readPin(PinValue_t *valueIn) {
 	if (!(valueIn->pin >= 0 && valueIn->pin < PIN_COUNT))
 		return ERROR_INTF_PIN_INVALID;
 
@@ -115,11 +83,11 @@ DataError_t readPin(PinValue_t *valueIn) {
 	} // switch
 } // readPin
 
-DataError_t writePin(PinValue_t *value) {
+DataError_t Interface_Adc::writePin(PinValue_t *value) {
 	return ERROR_NOT_AVAIL;
 } /* writePin */
 
-DataError_t writeConfig(InterfaceConfig_t *cfg) {
+DataError_t Interface_Adc::writeConfig(InterfaceConfig_t *cfg) {
 	switch (cfg->fmt) {
 	case ICFG_ADC_OFFSET_AND_TOLERANCE_RATIOS:
 		cfg->data[0] = avccOffsetRatio;
@@ -132,7 +100,7 @@ DataError_t writeConfig(InterfaceConfig_t *cfg) {
 	} // switch
 } // writeConfig
 
-DataError_t readConfig(InterfaceConfig_t *cfg) {
+DataError_t Interface_Adc::readConfig(InterfaceConfig_t *cfg) {
 	switch (cfg->fmt) {
 	case ICFG_ADC_OFFSET_AND_TOLERANCE_RATIOS:
 		avccOffsetRatio = cfg->data[0];
@@ -145,11 +113,11 @@ DataError_t readConfig(InterfaceConfig_t *cfg) {
 	} // switch
 } // readConfig
 
-DataError_t writeDeviceConfig(DeviceConfig_t *cfg) {
+DataError_t Interface_Adc::writeDeviceConfig(DeviceConfig_t *cfg) {
 	return ERROR_NOT_AVAIL;
 } // writeDeviceConfig
 
-DataError_t readDeviceConfig(DeviceConfig_t *cfg) {
+DataError_t Interface_Adc::readDeviceConfig(DeviceConfig_t *cfg) {
 	return ERROR_NOT_AVAIL;
 } // readDeviceConfig
 
@@ -160,11 +128,8 @@ DataError_t readDeviceConfig(DeviceConfig_t *cfg) {
  * @return TODO
  */
 
-uint8_t setPinMode(uint8_t pinNumber, PinMode_t pinMode){
+uint8_t Interface_Adc::setPinMode(uint8_t pinNumber, PinMode_t pinMode){
 	ROS_INFO("setPinMode: Data cannot be written to the %s interface!",
 	         interfaceIdToCharArray(interfaceTypeId));
 	return 0;
 } /* setPinMode */
-}
-
-;

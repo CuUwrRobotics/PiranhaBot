@@ -10,12 +10,6 @@
  */
 
 #include "HwHeader.h"
-#include "AllDevicesInterfaces.h"
-#include "PinBus.h"
-
-#include "BitTesting.h"
-
-#include "watchdog/pet_dog_msg.h"
 
 #define DEVICE_ADDRESS 0x55
 
@@ -265,36 +259,36 @@ void runBitTest(){
 	// Run the tests andflag if one fails, since they dump a LOT of data.
 	// PWM testing
 	// ===========
-	if (!testPwm(interfaces[6], devices[3], true)) testsOk = false;
-	if (!testPwm(interfaces[6], devices[3], false)) testsOk = false;
-	if (!testPwm(interfaces[7], devices[4], true)) testsOk = false;
-	if (!testPwm(interfaces[7], devices[4], false)) testsOk = false;
+	if (!bit_testing::testPwm(interfaces[6], devices[3], true)) testsOk = false;
+	if (!bit_testing::testPwm(interfaces[6], devices[3], false)) testsOk = false;
+	if (!bit_testing::testPwm(interfaces[7], devices[4], true)) testsOk = false;
+	if (!bit_testing::testPwm(interfaces[7], devices[4], false)) testsOk = false;
 
 	// GPIO testing
 	// ===========
-	if (!testGpio(interfaces[0], devices[0])) testsOk = false;
-	if (!testGpio(interfaces[1], devices[1])) testsOk = false;
+	if (!bit_testing::testGpio(interfaces[0], devices[0])) testsOk = false;
+	if (!bit_testing::testGpio(interfaces[1], devices[1])) testsOk = false;
 
 	// POWER testing
 	// ===========
-	if (!testPower(interfaces[3], devices[2])) testsOk = false;
+	if (!bit_testing::testPower(interfaces[3], devices[2])) testsOk = false;
 
 	// LEAK testing
 	// ===========
-	if (!testLeak(interfaces[2], devices[2])) testsOk = false;
+	if (!bit_testing::testLeak(interfaces[2], devices[2])) testsOk = false;
 
 	// EMERG_IO testing
 	// ================
-	if (!testEmergencyIo(interfaces[4], devices[2])) testsOk = false;
+	if (!bit_testing::testEmergencyIo(interfaces[4], devices[2])) testsOk = false;
 
 	// LEAK_LED testing
 	// ================
-	if (!testLed(interfaces[5], devices[2])) testsOk = false;
+	if (!bit_testing::testLed(interfaces[5], devices[2])) testsOk = false;
 
 	// ADC testing
 	// ================
-	if (!testAdc(interfaces[8], devices[5])) testsOk = false;
-	if (!testAdc(interfaces[9], devices[6])) testsOk = false;
+	if (!bit_testing::testAdc(interfaces[8], devices[5])) testsOk = false;
+	if (!bit_testing::testAdc(interfaces[9], devices[6])) testsOk = false;
 
 	// All tests done
 	if (!testsOk) {
@@ -468,7 +462,7 @@ int main(int argc, char *argv[]){
 	createAndInitInterfaces(); // Setup Interfaces
 	// YAML CONFIG GOES HERE
 	// All set; dump data
-	dumpConfiguration(true, interfaces, devices); // False for full pin listing
+	bit_testing::dumpConfiguration(true, interfaces, devices); // False for full pin listing
 	startupConfig();
 	runBitTest(); // Test interfaces
 // #undefine DUMP_CURRENT_READS
