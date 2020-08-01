@@ -137,8 +137,55 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
- add_executable(${PROJECT_NAME}_node src/HwMain.cpp)
- target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
+set(DEVICES
+	src/Device.cpp
+	src/Hardware/Device_Adc_Mcp3008.cpp
+		src/Hardware/Device_Gpio_Mcp23017.cpp
+	src/Hardware/Device_Pwm_Pca9685.cpp
+	)
+
+set(INTERFACES
+	src/Interface.cpp
+	src/Hardware/Interface_Adc.cpp
+	src/Hardware/Interface_Current_Acs781.cpp
+	src/Hardware/Interface_EmergIO.cpp
+	src/Hardware/Interface_Gpio.cpp
+	src/Hardware/Interface_Leak.cpp
+	src/Hardware/Interface_LeakLed.cpp
+	src/Hardware/Interface_Power.cpp
+	src/Hardware/Interface_Pwm.cpp
+	src/Hardware/Interface_Temp_Lm62.cpp
+	src/Hardware/Interface_Voltage_Div.cpp
+	src/Hardware/Interface_Voltage_Refrence.cpp
+	)
+set(OTHER_C_FILES
+	src/BitTesting.cpp
+	)
+set(PINBUS
+	src/PinBus.cpp
+)
+ add_executable(${PROJECT_NAME}_node src/HwMain.cpp ${PINBUS} ${INTERFACES} ${DEVICES} ${OTHER_C_FILES})
+# add_executable(${PROJECT_NAME}_node src/HwMain.cpp
+# 	src/PinBus.cpp
+# 	src/Device.cpp
+# 	src/Hardware/Device_Adc_Mcp3008.cpp
+# 	src/Hardware/Device_Gpio_Mcp23017.cpp
+# 	src/Hardware/Device_Pwm_Pca9685.cpp
+# 	src/Interface.cpp
+# 	src/Hardware/Interface_Adc.cpp
+# 	src/Hardware/Interface_Current_Acs781.cpp
+# 	src/Hardware/Interface_EmergIO.cpp
+# 	src/Hardware/Interface_Gpio.cpp
+# 	src/Hardware/Interface_Leak.cpp
+# 	src/Hardware/Interface_LeakLed.cpp
+# 	src/Hardware/Interface_Power.cpp
+# 	src/Hardware/Interface_Pwm.cpp
+# 	src/Hardware/Interface_Temp_Lm62.cpp
+# 	src/Hardware/Interface_Voltage_Div.cpp
+# 	src/Hardware/Interface_Voltage_Refrence.cpp
+# 	src/BitTesting.cpp
+# 	)
+target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

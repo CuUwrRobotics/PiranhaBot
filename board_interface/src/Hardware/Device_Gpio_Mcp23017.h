@@ -1,7 +1,17 @@
 // Header file exclusive to the the MCP23017 GPIO controller and it's communications.
 #ifndef MCP23017_GPIODEVICE
 #define MCP23017_GPIODEVICE
+
+// Generic headers
 #include <stdint.h>
+#include <stdio.h>
+#include <ros/ros.h>
+#include "HardwareDescription.h"
+#include "PinBus.h"
+#include "HardwareData.h"
+#include "Device.h"
+// #include "Interface.h"
+#include "Logger.h"
 
 // GPIO specific pin states
 const uint8_t MCP23017_PIN_ON = 0x01;
@@ -41,5 +51,99 @@ const uint8_t MCP23017_PIN_OUTPUT = 0x12;
 #define MCP23017_OLATB 0x15 // !< Output latch register 0 B
 
 #define MCP23017_INT_ERR 255 // !< Interrupt error
+
+/**
+ * Template device subclass for creating any new devices.
+ * @author
+ */
+class Device_Gpio_Mcp23017:
+public Device {
+private:
+// THESE VALUES MUST BE REVIEWED ON CREATION OF EACH NEW DEVICE SUBCLASS
+// ***************************************************************************
+// Metadata for Troubleshooting
+// ============================
+// Name specific to the product this device subclass will interface with.
+	char HARDWARE_NAME[9] = "MCP23017";
+
+// Informating About The Chip Used
+// ===============================.
+	const static uint8_t PIN_COUNT = 16;
+	const static Device_t deviceTypeId = DEVICE_GPIO;
+
+// Pin Modes That This Chip can Accept
+// ==============================================
+	const static uint8_t VALID_PIN_MODE_COUNT = 2;
+	const PinMode_t validPinModes[VALID_PIN_MODE_COUNT] = {MODE_INPUT,
+		                                                     MODE_OUTPUT};
+
+// Other Variables (Don't change these)
+// ====================================
+	Interface_t reservedPins[PIN_COUNT];
+// No pin values for GPIO, only HIGH/LOW, so each bit is one pin.
+	uint16_t currentPinValues;
+	uint16_t requestedPinValues;
+
+/* These give the base Device class access to the above local variables. They
+ * don't need any modification. See more info about each function in the Device
+ * class.
+ ******************************************************************************/
+
+	//
+	inline uint8_t getPinCount() {
+		return PIN_COUNT;
+	} // getPinCount
+
+	//
+	inline Device_t getDeviceTypeId() {
+		return deviceTypeId;
+	} // getDeviceTypeId
+
+	//
+	inline PinMode_t getValidPinModes(uint8_t i){
+		return validPinModes[i];
+	} // getValidPinModes
+
+	//
+	inline uint8_t getValidPinModesCount(){
+		return VALID_PIN_MODE_COUNT;
+	} // getValidPinModesCount
+
+	//
+	inline Interface_t &getReservedPins(uint8_t i){
+		return reservedPins[i];
+	} // getReservedPins
+
+	//
+	inline char *getHardwareName(){
+		return HARDWARE_NAME;
+	} // getHardwareName
+
+/* These actually drive the chip, and must be different for each device subclass.
+ ******************************************************************************/
+
+/**
+ * deviceInit is called by Device::init() just before completion. It should at
+ * least init the chip and run updateData() once. Note that the uint8_t var
+ * 'address' already has the address set by the time this is called.
+ * @return whether the init worked.
+ */
+
+	bool deviceInit();
+
+public:
+
+	DataError_t getPinValue(PinValue_t *value);
+
+	DataError_t setPinValue(PinValue_t *value);
+
+	DataError_t writeDeviceConfig(DeviceConfig_t *cfg);
+
+	DataError_t readDeviceConfig(DeviceConfig_t *cfg);
+
+	bool updateData();
+}
+
+;
 
 #endif /* ifndef MCP23017_GPIODEVICE */

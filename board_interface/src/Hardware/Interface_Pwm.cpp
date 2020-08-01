@@ -1,61 +1,14 @@
-/*
- */
-
- #include "HwHeader.h"
- #include "Devices_interfaces.h"
- 
-
- #include "Device_Pwm_Pca9685.h"
-
-/**
- * Interface_Pwm
- * @author Nicholas Steele
- */
-class Interface_Pwm : public Interface {
-private:
+#include "Interface_Pwm.h"
 // SET THESE FOR ANY NEW INTERFACE
 // ****************************************************************************
-// Metadata for Troubleshooting
-// ============================
-// Name specific to the product this device subclass will interface with.
-char INTERFACE_NAME[4] = "PWM"; // Length MUST = (# of chars) + 1
 // Information for Interacting with Other Code
 // ===========================================
 // Number of pins to be assigned to the parent device. Max = parent device max pins
-const static uint8_t PIN_COUNT = 16; // number of pins
-uint8_t interfaceTypeId = HardwareDescriptor::INTF_PWM; // The ID for this intf
-uint8_t parentDeviceTypeId = HardwareDescriptor::DEVICE_PWM; // The IF for the device
+// const static uint8_t PIN_COUNT = 16; // number of pins
+// const static Interface_t interfaceTypeId = INTF_PWM; // The ID for this intf
+// const static Device_t parentDeviceTypeId = DEVICE_PWM; // The IF for the device
 // ----------------------------------------------------------------------------
 
-// uint8_t pinMapToDevice[PIN_COUNT]; // Contains a map to the devices pins.
-// uint8_t pinModes[PIN_COUNT]; // Contains a map to the devices pins.
-// interface based on HD
-// class values
-public:
-
-/* Don't change these; they allow the base class to access locally assigned
- * variables.
- *****************************************************************************/
-
-//
-inline uint8_t getInterfaceTypeId(){
-	return interfaceTypeId;
-} // getTypeId
-
-//
-inline uint8_t getParentTypeId(){
-	return parentDeviceTypeId;
-} // getTypeId
-
-//
-inline uint8_t getPinCount(){
-	return PIN_COUNT;
-} // getPinCount
-
-//
-inline char *getInterfaceName(){
-	return INTERFACE_NAME;
-} // getPinCount
 
 /* These must be changed per interface to ensure operability.
  *****************************************************************************/
@@ -64,104 +17,112 @@ inline char *getInterfaceName(){
  * updateData() will be called after this, so there's no needto call it here.
  */
 
-void prepareInterface(){
-	// PinMode modes[4] = {MODE_OUTPUT, MODE_INPUT, MODE_OUTPUT, MODE_OUTPUT};
+void Interface_Pwm::prepareInterface(){
 	pinBus.setAllPins(MODE_OUTPUT);
-	commDevice->setPinModes(pinBus, interfaceTypeId);
+	commDevice->setPinModes(pinBus);
 } // prepareInterface
 
-/**
- * @param pin TODO
- * @param dataType TODO
- * @return TODO
- */
+DataError_t Interface_Pwm::readPin(PinValue_t *valueIn) {
+	if (!(valueIn->pin >= 0 && valueIn->pin < PIN_COUNT))
+		return ERROR_INTF_PIN_INVALID;
 
-float *readPin(uint8_t pin, DataType dataType) {
-	static float data[1];
-	// Requested format is available directly from device
-	if (dataType == PACKET_PWM_FREQ || dataType == PACKET_PWM_ON_TICKS)
-		data[0]  = commDevice->getPinValue(pinBus.getPin(pin),
-		                                   dataType);
-	return data;
-	// If program got here, data reformatting is needed from any other possible formats
-	if (dataType == PACKET_INVALID) {
-		ROS_ERROR("writePin: Recieved invalid dataType.\n");
-		return 0;
-	}
-	if (dataType == PACKET_PWM_DUTY_100) {
-		data[0] = commDevice->getPinValue(pinBus.getPin(pin),
-		                                  PACKET_PWM_ON_TICKS);
+	PinValue_t val;
+	DataError_t errorVal;
+	// Reads the pin on the device. Formatting/scaling/other data changes happen below.
+	// val.fmt = VALUE_ADC_DIRECT; // Set format
+	val.pin = pinBus.getPin(valueIn->pin); // Go from local pin to the device pin
+	val.data = valueIn->data; // Uses input data to store data
+	// errorVal = commDevice->getPinValue(&val); // Get the data
 
-		// printf("Read: %d", pinValue);
-		data[0] = (data[0] / (MAX_PWM_TICKS / 100));
-		return data;
-	} else {
-		ROS_ERROR("writePin: Recieved invalid dataType: %d\n", dataType);
-		return 0;
-	}
+	// Format data and return with the error/success code from device
+	switch (valueIn->fmt) {
+	case VALUE_PWM_FREQ:
+	case VALUE_PWM_ON_TICKS:
+		// These can both be readdirectly from PWM devices.
+		val.fmt = valueIn->fmt;
+		return commDevice->getPinValue(&val);
+		break;
+	case VALUE_PWM_DUTY_100:
+		val.fmt = VALUE_PWM_ON_TICKS;
+		errorVal = commDevice->getPinValue(&val);
+		valueIn->data[0] = (valueIn->data[0] / (MAX_PWM_TICKS / 100)); // TODO: MAX_PWM_TICKS
+		return errorVal;
+		break;
+	default:
+		return ERROR_NOT_AVAIL;
+		break;
+	} // switch
 } // readPin
 
-/**
- * writePin interprets a value to be assigned to a pin, then tells the parent
- * device commDevice to setPinValue using the commDevice's data conventions.
- * TODO: enumerate errors better
- * @param pinNumber The pin nunmber to try to drive
- * @param hd The full hardware descriptor.
- * @return 1 if there are no errors.
- */
-uint8_t writePin(uint8_t pinNumber, float *data, DataType dataType,
-                 uint64_t hd){
-	// Check that HD matches
-	if (hd != getHardwareDescriptor(pinNumber)) {
-		ROS_ERROR("writePin: Bad HD, not driving pin.\n");
-		return 0;
-	}
-	if (!(commDevice->ready())) {
-		ROS_ERROR("writePin: Device for interface not ready.\n");
-		return 0;
-	}
-	if (dataType == PACKET_INVALID) {
-		ROS_ERROR("writePin: Recieved invalid dataType.\n");
-		return 0;
-	}
-	float dataForDevice;
-	DataType dataTypeForDevice;
-	if (dataType == PACKET_PWM_FREQ) {
-		dataTypeForDevice = PACKET_PWM_FREQ;
-		// check/set frequency
-		if (data[0] > MAX_PWM_FREQUENCY_VALUE) // Max value for frequency
-			dataForDevice = MAX_PWM_FREQUENCY_VALUE;
-		else if (data[0] < 1) // Min value for frequency
-			dataForDevice = 1;
-		else dataForDevice = data[0];
-	} else if (dataType == PACKET_PWM_DUTY_100) {
-		dataTypeForDevice = PACKET_PWM_ON_TICKS;
-		if (data[0] > 100) // Max
-			dataForDevice = MAX_PWM_TICKS;
-		else
-			dataForDevice = (data[0] * MAX_PWM_TICKS) / 100;
-		// set PWM on/off ticks based on duty cycle
-	} else if (dataType == PACKET_PWM_ON_TICKS) {
-		dataTypeForDevice = PACKET_PWM_ON_TICKS;
-		if (data[0] > MAX_PWM_TICKS) // Max
-			dataForDevice = MAX_PWM_TICKS;
-		else
-			dataForDevice = data[0];
-		// check/set PWM on/off ticks based on on ticks
-	} else {
-		ROS_ERROR("writePin: Recieved invalid dataType: %d\n", dataType);
-		return 0;
-	} // Parent device expects data format PACKET_PWM_ON_TICKS
-	return commDevice->setPinValue(pinBus.getPin(pinNumber), &dataForDevice,
-	                               dataTypeForDevice, interfaceTypeId);
-} /* writePin */
+DataError_t Interface_Pwm::writePin(PinValue_t *valueIn) {
+	if (!(valueIn->pin >= 0 && valueIn->pin < PIN_COUNT))
+		return ERROR_INTF_PIN_INVALID;
 
-// **** OVERRIDE OVER PARENT CLASS ****
-uint8_t setPinMode(uint8_t pinNumber, PinMode pinMode, uint64_t hd){
+	PinValue_t val;
+	DataError_t errorVal; // not used
+	// Reads the pin on the device. Formatting/scaling/other data changes happen below.
+	// val.fmt = VALUE_GPIO_STATE; // Set format
+	val.pin = pinBus.getPin(valueIn->pin); // Go from local pin to the device pin
+	val.data = valueIn->data;
+	// errorVal = commDevice->setPinValue(&val); // Get the data
+
+	if (!(commDevice->ready()))
+		return ERROR_DEV_N_READY;
+
+	switch (valueIn->fmt) {
+	case VALUE_PWM_FREQ:
+		if (val.data[0] > MAX_VALUE_PWM_FREQUENCY_VALUE)
+			val.data[0] = MAX_VALUE_PWM_FREQUENCY_VALUE;
+		else if (val.data[0] < MIN_VALUE_PWM_FREQUENCY_VALUE)
+			val.data[0] = MIN_VALUE_PWM_FREQUENCY_VALUE;
+		val.fmt = VALUE_PWM_FREQ; // Set format
+		return commDevice->setPinValue(&val);
+		break;
+	case VALUE_PWM_DUTY_100:
+		if (val.data[0] > 100) // Max
+			val.data[0] = MAX_PWM_TICKS;
+		else if (val.data[0] < 0)
+			val.data[0] = MIN_PWM_TICKS;
+		else
+			val.data[0] = (val.data[0] * MAX_PWM_TICKS) / 100;
+		val.fmt = VALUE_PWM_ON_TICKS;
+		return commDevice->setPinValue(&val);
+		break;
+	case VALUE_PWM_ON_TICKS:
+		if (val.data[0] > MAX_PWM_TICKS)
+			val.data[0] = MAX_PWM_TICKS;
+		if (val.data[0] < MIN_PWM_TICKS)
+			val.data[0] = MIN_PWM_TICKS;
+		else
+			val.data[0] = val.data[0];
+		val.fmt = VALUE_PWM_ON_TICKS;
+		return commDevice->setPinValue(&val);
+		break;
+	default:
+		return ERROR_NOT_AVAIL;
+		break;
+	} // switch
+} // writePin
+
+DataError_t Interface_Pwm::writeConfig(InterfaceConfig_t *cfg) {
+	return ERROR_NOT_AVAIL;
+} // writeConfig
+
+DataError_t Interface_Pwm::readConfig(InterfaceConfig_t *cfg) {
+	return ERROR_NOT_AVAIL;
+} // readConfig
+
+DataError_t Interface_Pwm::writeDeviceConfig(DeviceConfig_t *cfg) {
+	return ERROR_NOT_AVAIL;
+} // writeDeviceConfig
+
+DataError_t Interface_Pwm::readDeviceConfig(DeviceConfig_t *cfg) {
+	return ERROR_NOT_AVAIL;
+} // readDeviceConfig
+
+// **** OVERRIDES BASE CLASS ****
+uint8_t Interface_Pwm::setPinMode(uint8_t pinNumber, PinMode_t pinMode){ // TODO: DataError_t
 	ROS_INFO("setPinMode: Pin modes cannot be written to the %s interface!",
-	         INTERFACE_NAME);
+	         interfaceIdToCharArray(interfaceTypeId));
 	return 0;
 } /* setPinMode */
-}
-
-;
