@@ -465,7 +465,6 @@ int main(int argc, char *argv[]){
 		for (int arg = 0; arg < argc; arg++) {
 			// Simulate hardware interfaces; will not actuually connect to hardware
 			// TODO
-			printf("%s\n", argv[arg]);
 			if (strcmp(argv[arg], "--sim") == 0) {
 				log_info("Simulating I/O, no hardware will be used. (TODO)");
 				simulate_hw = true;
