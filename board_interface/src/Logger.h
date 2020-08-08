@@ -13,7 +13,9 @@
 #include "ros/ros.h"
 
 #define log_info(a, ...) \
-	ROS_INFO(a__VA_OPT__(, ) __VA_ARGS__)
+	ROS_INFO("Internal Message: " a " [from %s (in %s:%d)]\n" \
+	         __VA_OPT__(, ) __VA_ARGS__,  \
+	         __FUNCTION__, __FILE__, __LINE__)
 
 #define log_warn(a, ...) \
 	ROS_WARN("Internal Warning: " a " [from %s (in %s:%d)]\n" \
