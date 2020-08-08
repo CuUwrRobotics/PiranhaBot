@@ -461,6 +461,7 @@ void hardwareExit() {
  * Reads commands from command line and assigns appropriate flags/data.
  */
 void readCommands(int argc, char *argv[]) {
+	bool show_help = false;
 	if (argc > 0) {
 		for (int arg = 0; arg < argc; arg++) {
 			// Simulate hardware interfaces; will not actuually connect to hardware
@@ -469,15 +470,25 @@ void readCommands(int argc, char *argv[]) {
 			}	else if ((!strcmp(argv[arg], "--test")) || (!strcmp(argv[arg], "-t"))) {
 				use_bit_test = true;
 			}	else {
-				printf("Valid board interface arguemnts: \n");
-				printf(
-					"\t-s\t--sim\tSimulate hardware without connecting to the board.\n");
-				printf(
-					"\t-t\t--test\tUse the built-in-testing to test the interfaces. DO NOT LEAVE HARDWARE CONNECTED TO THE BOARD!\n");
-				raise(SIGTERM); // Kill program
+				// ROS likes to pass a file path as an argument. This will ignore that path/
+				if (argv[arg][0] == '/')
+					continue;
+				// This will show help, but first it will go therough each invalid argument.
+				// Showing help will also kill the program.
+				printf("Got invalid argument: %s\n", argv[arg]);
+				show_help = true;
 			}
 		}
 	}
+	if (show_help) {
+		printf("Valid board interface arguemnts: \n");
+		printf(
+			"\t-s\t--sim\tSimulate hardware without connecting to the board.\n");
+		printf(
+			"\t-t\t--test\tUse the built-in-testing to test the interfaces. DO NOT LEAVE HARDWARE CONNECTED TO THE BOARD!\n");
+		raise(SIGTERM); // Kill program
+	}
+
 	// Simulated Hardware
 	if (!simulate_hw)
 		log_info("--sim not specified, not simulating hardware.");
