@@ -18,6 +18,8 @@ Device *devices[TOTAL_DEVICES];
 
 // Tells devices if the hardware is actually connected or if it should be faked
 bool simulate_hw = false;
+// Whether a BIT test will run at start
+bool use_bit_test = false;
 
 /**
  * Creates device objects, defining what type of device each object is.
@@ -465,19 +467,35 @@ int main(int argc, char *argv[]){
 		for (int arg = 0; arg < argc; arg++) {
 			// Simulate hardware interfaces; will not actuually connect to hardware
 			// TODO
-			if (strcmp(argv[arg], "--sim") == 0) {
+			if ((!strcmp(argv[arg], "--sim")) || (!strcmp(argv[arg], "-s"))) {
 				log_info("Simulating I/O, no hardware will be used. (TODO)");
 				simulate_hw = true;
+			}	else if ((!strcmp(argv[arg], "--test")) || (!strcmp(argv[arg], "-t"))) {
+				log_warn(
+					"Using bit tests. WARNING: DISCONNECT ALL HARDWARE FROM THE BOARD BEFORE PROCEDING!");
+				simulate_hw = true;
+			}	else if ((!strcmp(argv[arg], "--help")) || (!strcmp(argv[arg], "-h"))) {
+				printf("Board interface arguemnts: ");
+				printf("\t--sim\tSimulate hardware without connecting to the board.");
+				printf(
+					"\t--test\tUse the built-in-testing to test the interfaces. DO NOT LEAVE HARDWARE CONNECTED TO THE BOARD!");
+				return EXIT_SUCCESS;
 			}
 		}
 	}
+	if (!simulate_hw)
+		log_info("--sim not specified, not simulating hardware.");
+	if (!use_bit_test)
+		log_info("--test not specified, not running built in tests.");
+
 	createAndInitDevices(); // Setup Devices
 	createAndInitInterfaces(); // Setup Interfaces
 	// YAML CONFIG GOES HERE
 	// All set; dump data
 	bit_testing::dumpConfiguration(true, interfaces, devices); // False for full pin listing
 	startupConfig();
-	runBitTest(); // Test interfaces
+	if (use_bit_test)
+		runBitTest(); // Test interfaces
 // #undefine DUMP_CURRENT_READS
 #ifdef DUMP_CURRENT_READS
 	float *currentIn;
