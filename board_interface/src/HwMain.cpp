@@ -458,35 +458,44 @@ void hardwareExit() {
 } // hardwareExit
 
 /**
- * @return TODO
+ * Reads commands from command line and assigns appropriate flags/data.
  */
-
-int main(int argc, char *argv[]){
-	atexit(hardwareExit);
+void readCommands(int argc, char *argv[]) {
 	if (argc > 0) {
 		for (int arg = 0; arg < argc; arg++) {
 			// Simulate hardware interfaces; will not actuually connect to hardware
-			// TODO
 			if ((!strcmp(argv[arg], "--sim")) || (!strcmp(argv[arg], "-s"))) {
-				log_info("Simulating I/O, no hardware will be used. (TODO)");
-				simulate_hw = true;
+				simulate_hw = true; // TODO
 			}	else if ((!strcmp(argv[arg], "--test")) || (!strcmp(argv[arg], "-t"))) {
-				log_warn(
-					"Using bit tests. WARNING: DISCONNECT ALL HARDWARE FROM THE BOARD BEFORE PROCEDING!");
-				simulate_hw = true;
-			}	else if ((!strcmp(argv[arg], "--help")) || (!strcmp(argv[arg], "-h"))) {
-				printf("Board interface arguemnts: ");
-				printf("\t--sim\tSimulate hardware without connecting to the board.");
+				use_bit_test = true;
+			}	else {
+				printf("Valid board interface arguemnts: \n");
 				printf(
-					"\t--test\tUse the built-in-testing to test the interfaces. DO NOT LEAVE HARDWARE CONNECTED TO THE BOARD!");
-				return EXIT_SUCCESS;
+					"\t-s\t--sim\tSimulate hardware without connecting to the board.\n");
+				printf(
+					"\t-t\t--test\tUse the built-in-testing to test the interfaces. DO NOT LEAVE HARDWARE CONNECTED TO THE BOARD!\n");
+				raise(SIGTERM); // Kill program
 			}
 		}
 	}
+	// Simulated Hardware
 	if (!simulate_hw)
 		log_info("--sim not specified, not simulating hardware.");
+	else
+		log_info("Simulating I/O, no hardware will be used. (TODO)");
+
+	// Bit testing
 	if (!use_bit_test)
 		log_info("--test not specified, not running built in tests.");
+	else
+		log_warn(
+			"Using BIT tests. WARNING: DISCONNECT ALL HARDWARE FROM THE BOARD BEFORE PROCEDING!");
+} // readCommands
+
+int main(int argc, char *argv[]){
+	atexit(hardwareExit);
+
+	readCommands(argc, &argv[0]);
 
 	createAndInitDevices(); // Setup Devices
 	createAndInitInterfaces(); // Setup Interfaces
@@ -494,7 +503,7 @@ int main(int argc, char *argv[]){
 	// All set; dump data
 	bit_testing::dumpConfiguration(true, interfaces, devices); // False for full pin listing
 	startupConfig();
-	if (use_bit_test)
+	if (use_bit_test) // If the argument to ensable BIT tests was passed, run them
 		runBitTest(); // Test interfaces
 // #undefine DUMP_CURRENT_READS
 #ifdef DUMP_CURRENT_READS

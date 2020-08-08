@@ -5,6 +5,7 @@ using namespace std;
 
 #include <stdint.h>
 #include <stdio.h>
+#include <signal.h>
 #include <ros/ros.h>
 #include "HardwareDescription.h"
 #include "HardwareData.h"
