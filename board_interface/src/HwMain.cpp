@@ -458,6 +458,14 @@ void hardwareExit() {
 
 int main(int argc, char *argv[]){
 	atexit(hardwareExit);
+	if (argc > 0) {
+		// Simulate hardware interfaces; will not actuually connect to hardware
+		// TODO
+		if (strcmp(argv, "--sim") == 0) {
+			log_info("Simulating I/O, no hardware will be used. (TODO)")();
+			simulate_hw = true;
+		}
+	}
 	createAndInitDevices(); // Setup Devices
 	createAndInitInterfaces(); // Setup Interfaces
 	// YAML CONFIG GOES HERE
