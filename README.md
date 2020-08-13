@@ -6,9 +6,9 @@
 ### Issues
 
 Issues color-coded tags, where certain colors for tags denote what the tag is for. This is the color code for common tags:
-- ![#7fe3e1](https://via.placeholder.com/15/7fe3e1/000000?text=+) `Teal`: How advanced the programming work is.
-- ![#1d76db](https://via.placeholder.com/15/1d76db/000000?text=+) `Blue`: The type of issue.
-- ![#eeeeee](https://via.placeholder.com/15/eeeeee/000000?text=+) `Grey`: What topic the issue mainly covers.
+- ![#7fe3e1](https://via.placeholder.com/15/7fe3e1/000000?text=+) `Level`: How advanced the programming work is.
+- ![#1d76db](https://via.placeholder.com/15/1d76db/000000?text=+) `Kind`: The type of issue.
+- ![#eeeeee](https://via.placeholder.com/15/eeeeee/000000?text=+) `Area`: What topic the issue mainly covers.
 
 Other colors are used for some tags, like the red `vital` tag.
 
