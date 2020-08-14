@@ -12,20 +12,29 @@ function customTag(tagName, fn) {
 
 function createSlideSwitch(element) {
   // code for rendering the element goes here
-  if (!element.attributes.val) {
+  var createLabel, id, name, disable;
+  if (!element.attributes.var) {
     console.error("No id given for x-slideswitch tag.");
     return;
   }
+  createLabel = true;
   if (!element.attributes.text) {
-    console.error("No text given for x-slideswitch tag.");
-    return;
+    createLabel = false;
   }
-  var id = element.attributes.val.value;
-  var name = element.attributes.text.value;
-  element.innerHTML = "<label class=\"switch-label\" for=\"" + id + "\">" + name + " </label>";
-  // element.innerHTML += ;
-  element.innerHTML += "<label class=\"switch\"><input type=\"checkbox\" id=\"" + id + "\">\n<span class=\"slider round\"></span></label>";
+  id = element.attributes.var.value;
+  name = element.attributes.text.value;
+  if (element.attributes.disabled) disable = true;
+  else disable = false;
 
+  element.innerHTML = "";
+  if (createLabel) {
+    element.innerHTML += "<label class=\"switch-label\" for=\"" + id + "\">" +
+      name + " </label>";
+  }
+  element.innerHTML += "<label class=\"switch\"><input " +
+    ((disable) ? "disabled" : "") +
+    " type=\"checkbox\" id=\"" + id +
+    "\">\n<span class=\"slider round\"></span></label>";
 }
 
 customTag("x-slideswitch", createSlideSwitch);

@@ -12,21 +12,15 @@
   <div class="camera_settings">
     <table class="settings_list">
       <td>
-        Lights
-        <label class="switch">
-          <input type="checkbox">
-          <span class="slider round"></span>
-        </label>
+        <x-slideswitch var="cam_lights" text="Lights" />
       </td>
       <td>
-        Use Algorithm
-        <label class="switch">
-          <input disabled type="checkbox">
-          <span class="slider round"></span>
-        </label>
+        <x-slideswitch var="cam_use_algo" text="Use Algorithm" />
       </td>
     </table>
   </div>
 </body>
+
+<script type="text/javascript" src="../common/slide_switch_tag.js"></script>
 
 </html>

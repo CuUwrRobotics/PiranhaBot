@@ -7,23 +7,17 @@
   <table>
     <tr>
       <td>
-        Front
-        <label class="switch light">
-          <input type="checkbox">
-          <span class="slider round light"></span>
-        </label>
+        <x-slideswitch var="light_front" text="Front" />
       </td>
     </tr>
     <tr>
       <td>
-        Back
-        <label class="switch light">
-          <input disabled type="checkbox">
-          <span class="slider round light"></span>
-        </label>
+        <x-slideswitch var="light_back" text="Back" />
       </td>
     </tr>
   </table>
 </body>
+
+<script type="text/javascript" src="../common/slide_switch_tag.js"></script>
 
 </html>
