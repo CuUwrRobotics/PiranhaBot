@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<link rel="stylesheet" type="text/css" href="../common/design_main.css">
+<link rel="stylesheet" type="text/css" href="../common/tabs.css">
+<link rel="stylesheet" type="text/css" href="cam_tabs.css">
+
+<body style="margin: 0px">
+
+  <!-- Tab links -->
+  <table class="tab" cellspacing="0" cellpadding="0">
+    <td><button class="tablinks" onclick="openTab(event, 'Camera 1')" id="defaultOpen">Camera 1</button></td>
+    <td><button class="tablinks" onclick="openTab(event, 'Camera 2')">Camera 2</button></td>
+    <td><button class="tablinks" onclick="openTab(event, 'Camera 3')">Camera 3</button></td>
+  </table>
+
+  <!-- Tab content -->
+  <div id="Camera 1" class="tabcontent">
+    <iframe src="camera.html#1" class="camera_frame"> </iframe>
+  </div>
+
+  <div id="Camera 2" class="tabcontent">
+    <iframe src="camera.html#2" class="camera_frame"> </iframe>
+  </div>
+
+  <div id="Camera 3" class="tabcontent">
+    <iframe src="camera.html#3" class="camera_frame"> </iframe>
+  </div>
+  </td>
+
+  <script src="../common/tabs.js"></script>
+
+</body>
+
+</html>

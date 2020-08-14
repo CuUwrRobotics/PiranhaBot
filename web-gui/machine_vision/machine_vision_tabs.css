@@ -1,0 +1,9 @@
+.mv_frame {
+  border: none;
+  margin: none;
+  padding: none;
+  background-color: var(--bg_color);
+  /* color: #eee; */
+  width: 100%;
+  height: 100%;
+}

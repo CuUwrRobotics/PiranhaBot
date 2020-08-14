@@ -1,0 +1,64 @@
+:root {
+  --tab_bg_color: var(--text_color);
+  --tab_active_color: var(--bg_color);
+  --tab_hover_color: var(--theme_light_grey);
+}
+
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  width: 100%;
+  margin: 0px;
+  border: 0px;
+  padding: 0;
+  background-color: var(--tab_bg_color);
+  color: var(--text_color);
+  height: 10px;
+  border-spacing: 0px;
+}
+
+.tab table tr td {
+  display: block;
+  padding: 0;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0px;
+}
+
+.tab td {
+  float: left;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+  border-radius: 3px 3px 0 0;
+  background-color: var(--tab_bg_color);
+  float: left;
+  margin: 0px;
+  border: none;
+  outline: none;
+  /* cursor: pointer; */
+  padding: 3px 7px 3px;
+  color: var(--bg_color);
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  transition: 0.1s;
+  background-color: var(--tab_hover_color);
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  color: var(--tab_bg_color);
+  background-color: var(--tab_active_color);
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  /* Height accounts for tab bar */
+  height: calc(100vh - 22px);
+}

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<link rel="stylesheet" type="text/css" href="../common/tabs.css">
+<link rel="stylesheet" type="text/css" href="../common/design_main.css">
+<link rel="stylesheet" type="text/css" href="machine_vision_tabs.css">
+
+<body style="margin: 0px">
+
+
+  <!-- Tab links -->
+  <table class="tab" cellspacing="0" cellpadding="0">
+    <td><button class="tablinks" onclick="openTab(event, 'Algo 1')" id="defaultOpen">Algo 1</button></td>
+    <td><button class="tablinks" onclick="openTab(event, 'Algo 2')">Algo 2</button></td>
+    <td><button class="tablinks" onclick="openTab(event, 'Algo 3')">Algo 3</button></td>
+    <!-- Creates a new instance of a machine vision algorithm, so multiple can exists at once -->
+    <td><button class="tablinks" onclick="openTab(event, 'create_instance')">New...</button></td>
+  </table>
+
+  <!-- Tab content -->
+  <div id="Algo 1" class="tabcontent">
+    <iframe src="machine_vision.html#1" class="mv_frame"> </iframe>
+  </div>
+
+  <div id="Algo 2" class="tabcontent">
+    <iframe src="machine_vision.html#2" class="mv_frame"> </iframe>
+  </div>
+
+  <div id="Algo 3" class="tabcontent">
+    <iframe src="machine_vision.html#3" class="mv_frame"> </iframe>
+  </div>
+
+  <div id="create_instance" class="tabcontent">
+    <iframe src="machine_vision.html#new" class="mv_frame"> </iframe>
+  </div>
+  </td>
+
+  <script src="../common/tabs.js"></script>
+
+</body>
+
+</html>

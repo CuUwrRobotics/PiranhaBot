@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<link rel="stylesheet" type="text/css" href="../common/tabs.css">
+<link rel="stylesheet" type="text/css" href="../common/design_main.css">
+<link rel="stylesheet" type="text/css" href="control.css">
+
+<body style="margin: 0px">
+
+
+  <!-- Tab links -->
+  <table class="tab" cellspacing="0" cellpadding="0">
+    <td><button class="tablinks" onclick="openTab(event, 'Lights')" id="defaultOpen">Lights</button></td>
+    <td><button class="tablinks" onclick="openTab(event, 'Grabbers')">Grabbers</button></td>
+    <td><button class="tablinks" onclick="openTab(event, 'Telemetry')">Telemetry</button></td>
+  </table>
+
+  <!-- Tab content -->
+  <div id="Lights" class="tabcontent">
+    <iframe src="lights.html" class="control_frame"> </iframe>
+  </div>
+
+  <div id="Grabbers" class="tabcontent">
+    <iframe src="grabber.html" class="control_frame"> </iframe>
+  </div>
+
+  <div id="Telemetry" class="tabcontent">
+    <iframe src="telemetry.html" class="control_frame"> </iframe>
+  </div>
+  </td>
+
+    <script src="../common/tabs.js"></script>
+
+</body>
+
+</html>

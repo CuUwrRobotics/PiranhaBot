@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<link rel="stylesheet" type="text/css" href="../common/tabs.css">
+<link rel="stylesheet" type="text/css" href="../common/design_main.css">
+<link rel="stylesheet" type="text/css" href="terminal.css">
+
+<body style="margin: 0px">
+
+
+  <!-- Tab links -->
+  <table class="tab" cellspacing="0" cellpadding="0">
+    <td><button class="tablinks" onclick="openTab(event, 'T_1')" id="defaultOpen">T1</button></td>
+    <td><button class="tablinks" onclick="openTab(event, 'T_2')">T2</button></td>
+    <td><button class="tablinks" onclick="openTab(event, 'T_3')">T3</button></td>
+    <td><button class="tablinks" onclick="openTab(event, 'new')">+</button></td>
+  </table>
+
+  <!-- Tab content -->
+  <div id="T_1" class="tabcontent">
+    <iframe src="terminal.html#1" class="terminal_frame"> </iframe>
+  </div>
+
+  <div id="T_2" class="tabcontent">
+    <iframe src="terminal.html#2" class="terminal_frame"> </iframe>
+  </div>
+
+  <div id="T_3" class="tabcontent">
+    <iframe src="terminal.html#3" class="terminal_frame"> </iframe>
+  </div>
+
+  <div id="new" class="tabcontent">
+    <iframe src="terminal.html#new" class="terminal_frame"> </iframe>
+  </div>
+  </td>
+
+  <script src="../common/tabs.js"></script>
+
+</body>
+
+</html>

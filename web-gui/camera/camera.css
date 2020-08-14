@@ -1,0 +1,15 @@
+.camera_settings {
+  padding: 5px;
+  background: var(--bg_color);
+  color: var(--text_color);
+  /* Show on bottom of window */
+  overflow: hidden;
+  position: fixed;
+  bottom: 0;
+  display: block;
+  width: 100%;
+}
+
+.settings_list td {
+  padding: 0 15px;
+}

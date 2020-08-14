@@ -1,0 +1,31 @@
+:root {
+  /* highlights/focus colors */
+  /* teal */
+  --theme_highlight_1: #4ecca3;
+  /* red */
+  --theme_highlight_2: #e43f5a;
+  /* yellow/orange */
+  --theme_highlight_3: #f2a365;
+  /* magenta */
+  --theme_highlight_4: #e14594;
+  --theme_disabled: #0c3c78;
+  /* Other colors */
+  --theme_black: #232931;
+  --theme_dark_grey: #393e46;
+  --theme_grey: #4b5d67;
+  --theme_light_grey: #6c8796;
+  --theme_white: #eee;
+  /* use these instead of the above ones when possible */
+  /* --text_color: var(--theme_black);
+  --bg_color: var(--theme_white); */
+  --text_color: var(--theme_white);
+  --bg_color: var(--theme_black);
+  --bg_color_2: var(--theme_grey);
+}
+
+* {
+  font-size: 14px;
+  font-family: sans-serif;
+  color: var(--text_color);
+  background-color: var(--bg_color);
+}
