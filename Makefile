@@ -17,6 +17,8 @@ GIT_DOCKERFILE = Docker/git.Dockerfile
 LOCAL_DOCKERFILE = Docker/local.Dockerfile
 BASE_DOCKERFILE = Docker/base.Dockerfile
 
+refresh: kill local
+
 local: build-local run-local
 
 git: build-git run-git
@@ -69,7 +71,7 @@ run-git: build-git
 
 ## KILL DETATCHED CONTAINER ###################################################
 kill:
-	$(D_KILL) $(CONTAINER_NAME)
+	-$(D_KILL) $(CONTAINER_NAME)
 
 ## CLEANUPS ###################################################################
 
