@@ -15,5 +15,5 @@ service ssh restart
 echo '[42mContainer started successfully.[0m'
 echo Container ID: $(cat /etc/hostname)
 
-# Keep container running 
+# Keep container running
 tail -f /dev/null
