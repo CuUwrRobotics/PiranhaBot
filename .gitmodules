@@ -1,3 +1,6 @@
 [submodule "board_interface"]
 	path = board_interface
 	url = https://github.com/CuUwrRobotics/board_interface.git
+[submodule "camera_controller"]
+	path = camera_controller
+	url = https://github.com/CuUwrRobotics/camera_controller.git
