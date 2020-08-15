@@ -7,3 +7,6 @@
 [submodule "web-gui"]
 	path = web-gui
 	url = https://github.com/CuUwrRobotics/web-gui
+[submodule "diagnostic_display"]
+	path = diagnostic_display
+	url = https://github.com/CuUwrRobotics/diagnostic_display
