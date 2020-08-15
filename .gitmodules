@@ -4,3 +4,6 @@
 [submodule "camera_controller"]
 	path = camera_controller
 	url = https://github.com/CuUwrRobotics/camera_controller.git
+[submodule "web-gui"]
+	path = web-gui
+	url = https://github.com/CuUwrRobotics/web-gui
