@@ -16,3 +16,6 @@
 [submodule "PiranhaBot"]
 	path = PiranhaBot
 	url = https://github.com/CuUwrRobotics/PiranhaBot
+[submodule "SurfaceDevice/pelco_d_interface"]
+	path = SurfaceDevice/pelco_d_interface
+	url = https://github.com/CuUwrRobotics/pelco_d_interface
