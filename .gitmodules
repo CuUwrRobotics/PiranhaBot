@@ -19,3 +19,6 @@
 [submodule "watchdog"]
 	path = watchdog
 	url = https://github.com/CuUwrRobotics/watchdog
+[submodule "ros-docker"]
+	path = ros-docker
+	url = https://github.com/CuUwrRobotics/ros-docker.git
